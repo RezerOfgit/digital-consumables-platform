@@ -1,0 +1,20 @@
+server:
+  port: 8080 # 网页访问端口
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 注意把 your_password 换成你本地数据库的真实密码！
+    url: jdbc:mysql://127.0.0.1:3306/lab_consumables_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+
+mybatis:
+  # 打印底层 SQL，方便我们以后调试排错
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  # 开启驼峰命名自动映射 (把 category_id 自动转成 categoryId)
+  map-underscore-to-camel-case: true
+  # 如果我们后面写 mapper.xml，告诉系统去哪里找它
+  mapper-locations: classpath:mapper/*.xml
+

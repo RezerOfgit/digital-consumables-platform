@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lab.mapper.MaterialMapper">
+
+    <select id="findAll" resultType="com.lab.entity.Material">
+        SELECT * FROM material ORDER BY create_time DESC
+    </select>
+
+    <select id="findByCategoryId" resultType="com.lab.entity.Material">
+        SELECT * FROM material WHERE category_id = #{categoryId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO material (category_id, name, specification, unit, stock, danger_level, storage_condition)
+        VALUES (#{categoryId}, #{name}, #{specification}, #{unit}, #{stock}, #{dangerLevel}, #{storageCondition})
+    </insert>
+
+    <update id="updateStock">
+        UPDATE material SET stock = stock + #{num} WHERE id = #{id}
+    </update>
+
+</mapper>
