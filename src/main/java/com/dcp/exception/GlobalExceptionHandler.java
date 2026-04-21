@@ -1,6 +1,6 @@
-package com.lab.exception;
+package com.dcp.exception;
 
-import com.lab.dto.R;
+import com.dcp.dto.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;

@@ -1,6 +1,6 @@
-package com.lab.mapper;
+package com.dcp.mapper;
 
-import com.lab.entity.Category;
+import com.dcp.entity.Category;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

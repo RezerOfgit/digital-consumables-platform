@@ -8,27 +8,17 @@
         <version>2.7.18</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.lab</groupId>
-    <artifactId>lab-consumables-manager</artifactId>
+
+    <groupId>com.dcp</groupId>
+    <artifactId>digital-consumables-platform</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>lab-consumables-manager</name>
-    <description>lab-consumables-manager</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
+    <name>digital-consumables-platform</name>
+    <description>数字化耗材管控平台</description>
+
     <properties>
         <java.version>17</java.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -46,11 +36,13 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

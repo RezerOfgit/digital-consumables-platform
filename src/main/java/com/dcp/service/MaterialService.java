@@ -1,8 +1,8 @@
-package com.lab.service;
+package com.dcp.service;
 
-import com.lab.entity.Material;
-import com.lab.exception.BusinessException;
-import com.lab.mapper.MaterialMapper;
+import com.dcp.entity.Material;
+import com.dcp.exception.BusinessException;
+import com.dcp.mapper.MaterialMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

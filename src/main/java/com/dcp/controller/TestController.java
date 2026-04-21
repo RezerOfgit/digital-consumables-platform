@@ -1,7 +1,7 @@
-package com.lab.controller;
+package com.dcp.controller;
 
-import com.lab.dto.R;
-import com.lab.exception.BusinessException;
+import com.dcp.dto.R;
+import com.dcp.exception.BusinessException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

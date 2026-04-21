@@ -1,8 +1,8 @@
-package com.lab.controller;
+package com.dcp.controller;
 
-import com.lab.dto.R;
-import com.lab.entity.Category;
-import com.lab.service.CategoryService;
+import com.dcp.dto.R;
+import com.dcp.entity.Category;
+import com.dcp.service.CategoryService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;

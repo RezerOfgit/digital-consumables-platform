@@ -1,4 +1,4 @@
-package com.lab;
+package com.dcp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

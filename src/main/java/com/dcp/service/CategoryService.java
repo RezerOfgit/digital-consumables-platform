@@ -1,7 +1,7 @@
-package com.lab.service;
+package com.dcp.service;
 
-import com.lab.entity.Category;
-import com.lab.mapper.CategoryMapper;
+import com.dcp.entity.Category;
+import com.dcp.mapper.CategoryMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

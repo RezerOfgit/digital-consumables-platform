@@ -2,11 +2,11 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lab.mapper.CategoryMapper">
 
-    <select id="findAll" resultType="com.lab.entity.Category">
+    <select id="findAll" resultType="com.dcp.entity.Category">
         SELECT * FROM category ORDER BY sort DESC
     </select>
 
-    <select id="findById" resultType="com.lab.entity.Category">
+    <select id="findById" resultType="com.dcp.entity.Category">
         SELECT * FROM category WHERE id = #{id}
     </select>
 

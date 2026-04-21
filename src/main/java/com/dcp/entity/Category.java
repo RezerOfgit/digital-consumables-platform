@@ -1,4 +1,4 @@
-package com.lab.entity;
+package com.dcp.entity;
 
 import lombok.Data;
 

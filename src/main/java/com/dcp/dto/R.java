@@ -1,4 +1,4 @@
-package com.lab.dto;
+package com.dcp.dto;
 
 import lombok.Data;
 import java.io.Serializable;

@@ -1,4 +1,4 @@
-package com.lab.exception;
+package com.dcp.exception;
 
 /**
  * @author Re-zero

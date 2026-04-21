@@ -1,6 +1,6 @@
-package com.lab.mapper;
+package com.dcp.mapper;
 
-import com.lab.entity.Material;
+import com.dcp.entity.Material;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
