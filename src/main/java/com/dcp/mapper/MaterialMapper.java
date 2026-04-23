@@ -21,4 +21,6 @@ public interface MaterialMapper {
     int insert(Material material);
 
     int updateStock(@Param("id") Long id, @Param("num") Integer num);
+
+    Material findById(Long id);
 }

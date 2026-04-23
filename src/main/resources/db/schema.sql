@@ -52,7 +52,21 @@ INSERT INTO `material` (`category_id`, `name`, `specification`, `unit`, `stock`,
 (2, '均苯四甲酸二酐 (PMDA)', '纯度≥99.5%', 'kg', 50, 1, '密封防潮'),
 (3, '氢氟酸 (HF)', '49%-500ml/瓶', '瓶', 30, 3, '专用防腐柜，双人双锁');
 
+USE `dcp`;
 
+-- 创建领用记录表 (本质就是订单表)
+CREATE TABLE IF NOT EXISTS `record` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `material_id` BIGINT NOT NULL COMMENT '领用的耗材ID',
+  `applicant` VARCHAR(50) NOT NULL COMMENT '申请人姓名/工号',
+  `quantity` INT NOT NULL COMMENT '申请领用数量',
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '审批状态: 0-待审批, 1-已发料, 2-已驳回',
+  `remark` VARCHAR(255) COMMENT '用途说明/备注',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_material_id` (`material_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='领用记录表';
 
 
 
