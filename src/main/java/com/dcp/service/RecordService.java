@@ -6,6 +6,7 @@ import com.dcp.entity.MaterialRecord;
 import com.dcp.exception.BusinessException;
 import com.dcp.mapper.MaterialMapper;
 import com.dcp.mapper.RecordMapper;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,39 +26,54 @@ public class RecordService {
     @Resource
     private MaterialMapper materialMapper;
 
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
+
+    // 这个常量必须和预热时的一致
+    private static final String STOCK_KEY_PREFIX = "dcp:material:stock:";
+
     /**
      * 提交领用申请 (核心业务)
      * @Transactional 注解保证了下面的操作要么全部成功，要么全部回滚！
      */
     @Transactional(rollbackFor = Exception.class)
     public void applyMaterial(ApplyDTO applyDTO) {
-        // 1. 查 (Check)：查询耗材是否存在，以及库存够不够
-        // 这里需要你去 MaterialMapper.java 和 xml 里补一个 findById 方法（马上交给你办）
-        Material material = materialMapper.findById(applyDTO.getMaterialId());
+        String redisKey = STOCK_KEY_PREFIX + applyDTO.getMaterialId();
 
-        if (material == null) {
-            throw new BusinessException("该耗材不存在！");
-        }
-        if (material.getStock() < applyDTO.getQuantity()) {
-            throw new BusinessException("库存不足！当前余量：" + material.getStock());
+        // 1. 【高并发核心】Redis 原子预扣减库存
+        // decrement 方法利用了 Redis 的 DECRBY 命令，它是原子性的，绝不会超卖
+        Long remainStock = redisTemplate.opsForValue().decrement(redisKey, applyDTO.getQuantity());
+
+        // 2. 检查扣减后的库存
+        if (remainStock == null) {
+            // 如果返回 null，说明 Redis 里压根没有这个键（可能预热失败或没这个耗材）
+            throw new BusinessException("耗材缓存未命中或不存在！");
         }
 
-        // 2. 扣 (Update)：扣减库存 (注意：传进去的是负数，代表扣减)
-        // 这个方法你在 Day 2 已经写过了！
+        if (remainStock < 0) {
+            // 扣完了发现变成负数了，说明库存不足！
+            // 【重要补偿机制】：既然没货，我们得把刚才多扣的库存加回去（原子递增）
+            redisTemplate.opsForValue().increment(redisKey, applyDTO.getQuantity());
+            throw new BusinessException("手慢了，该耗材已被抢空或库存不足！");
+        }
+
+        // 3. Redis 扣减成功后，再让 MySQL 去慢慢扣减真实库存
+        // 这一步依然有 @Transactional 保护，如果报错，整体回滚
         int updatedRows = materialMapper.updateStock(applyDTO.getMaterialId(), -applyDTO.getQuantity());
         if (updatedRows == 0) {
-            throw new BusinessException("扣减库存失败，请重试！");
+            // 理论上只要 Redis 没问题，这里不会报错，但为了严谨还是要校验
+            redisTemplate.opsForValue().increment(redisKey, applyDTO.getQuantity()); // 补偿 Redis
+            throw new BusinessException("数据库落盘失败，请重试！");
         }
 
-        // 3. 记 (Insert)：生成领用记录
-        MaterialRecord materialRecord = new MaterialRecord();
-        materialRecord.setMaterialId(applyDTO.getMaterialId());
-        materialRecord.setApplicant(applyDTO.getApplicant());
-        materialRecord.setQuantity(applyDTO.getQuantity());
-        materialRecord.setRemark(applyDTO.getRemark());
-        materialRecord.setStatus(1); // V1.0 简化流程，提交即发料成功(状态 1)
+        // 4. 生成 MySQL 领用记录
+        MaterialRecord record = new MaterialRecord();
+        record.setMaterialId(applyDTO.getMaterialId());
+        record.setApplicant(applyDTO.getApplicant());
+        record.setQuantity(applyDTO.getQuantity());
+        record.setRemark(applyDTO.getRemark());
+        record.setStatus(1);
 
-        int i = 1 / 0; // 人为制造运行时异常
-        recordMapper.insert(materialRecord);
+        recordMapper.insert(record);
     }
 }
