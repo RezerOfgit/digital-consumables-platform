@@ -57,6 +57,7 @@ public class RecordService {
         materialRecord.setRemark(applyDTO.getRemark());
         materialRecord.setStatus(1); // V1.0 简化流程，提交即发料成功(状态 1)
 
+        int i = 1 / 0; // 人为制造运行时异常
         recordMapper.insert(materialRecord);
     }
 }
