@@ -68,8 +68,27 @@ CREATE TABLE IF NOT EXISTS `record` (
   KEY `idx_material_id` (`material_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='领用记录表';
 
+USE `dcp`;
 
+-- 创建用户表
+CREATE TABLE IF NOT EXISTS `user` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `username` VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
+  `password` VARCHAR(100) NOT NULL COMMENT '加密后的密码',
+  `real_name` VARCHAR(50) COMMENT '真实姓名',
+  `role` VARCHAR(20) NOT NULL DEFAULT 'USER' COMMENT '角色: USER-实验员, ADMIN-库管员',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户信息表';
 
+-- 预插两个用户 (注意：这里密码是明文，等下我们用代码加密)
+-- 账号：admin / 密码：123456
+-- 账号：test01 / 密码：123456
+INSERT INTO `user` (`username`, `password`, `real_name`, `role`) VALUES
+('admin', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.vK5SBy6O5fTfyWq9lE.0.O.', '系统管理员', 'ADMIN'),
+('test01', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.vK5SBy6O5fTfyWq9lE.0.O.', '实验员-张三', 'USER');
+
+UPDATE `user` SET `password` = '$2a$10$26u493XGfsBbAIlnbIvCCORB./tUN0mQvuQTILR90oEriwpHKnVqm' WHERE `username` = 'admin';
 
 
 
