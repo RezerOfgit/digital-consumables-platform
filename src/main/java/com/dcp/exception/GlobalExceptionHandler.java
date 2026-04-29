@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.stream.Collectors;
+import org.springframework.security.access.AccessDeniedException; // 别忘了导包
 
 /**
  * @author Re-zero
@@ -55,5 +56,12 @@ public class GlobalExceptionHandler {
     public R<Void> handleException(Exception e) {
         log.error("系统异常", e);
         return R.fail("系统内部错误");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)   // HTTP 403
+    public R<Void> handleAccessDeniedException(AccessDeniedException e) {
+        log.warn("权限不足: {}", e.getMessage());
+        return R.fail(403, "抱歉，您的角色权限不足，拒绝访问！");  // 业务码也建议用 403
     }
 }
