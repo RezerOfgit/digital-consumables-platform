@@ -88,7 +88,8 @@ INSERT INTO `user` (`username`, `password`, `real_name`, `role`) VALUES
 ('admin', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.vK5SBy6O5fTfyWq9lE.0.O.', '系统管理员', 'ADMIN'),
 ('test01', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.vK5SBy6O5fTfyWq9lE.0.O.', '实验员-张三', 'USER');
 
-UPDATE `user` SET `password` = '$2a$10$26u493XGfsBbAIlnbIvCCORB./tUN0mQvuQTILR90oEriwpHKnVqm' WHERE `username` = 'admin';
+UPDATE `user` SET `password` = '$2a$10$qj5.QkR87oTJzY9nXz56nO0J32kLQFw9qKBxqiWiM2LY4SbHCYcbu' WHERE `username` = 'admin';
+UPDATE `user` SET `password` = '$2a$10$qj5.QkR87oTJzY9nXz56nO0J32kLQFw9qKBxqiWiM2LY4SbHCYcbu' WHERE `username` = 'test01';
 
 
 

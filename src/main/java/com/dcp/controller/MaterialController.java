@@ -24,23 +24,11 @@ public class MaterialController {
         return R.ok(materialService.listAll());
     }
 
-//    @PostMapping("/add")
-//    public R<Void> add(@RequestBody Material material) {
-//        materialService.addMaterial(material);
-//        return R.ok("耗材入库成功", null);
-//    }
-
-    // 【新增测试接口】：只有 ADMIN 角色才能访问！
-//    @PostMapping("/add")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public R<String> addMaterial() {
-//        // 里面先不写具体业务，只测试权限拦截
-//        return R.ok("耗材入库成功！您是尊贵的 ADMIN 库管员！", null);
-//    }
-
+    // 真正的耗材入库接口：只有 ADMIN 角色才能访问！
     @PostMapping("/add")
-    @PreAuthorize("hasRole('ADMIN')")   // 权限控制加在这里
+    @PreAuthorize("hasRole('ADMIN')")
     public R<Void> add(@RequestBody Material material) {
+        // 执行真实的入库逻辑
         materialService.addMaterial(material);
         return R.ok("耗材入库成功", null);
     }

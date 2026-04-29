@@ -16,7 +16,7 @@ public class Material {
     private String specification;
     private String unit;
     private Integer stock;
-    private Integer dangerLevel;
+    private Integer dangerLevel = 0;
     private String storageCondition;
     private Date createTime;
     private Date updateTime;
