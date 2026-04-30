@@ -8,6 +8,11 @@ spring:
     username: root
     password: 123456
 
+  # 解决 Spring Boot 2.6+ 与 Swagger 2 的兼容性问题
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
 mybatis:
   # 打印底层 SQL，方便我们以后调试排错
   configuration:
