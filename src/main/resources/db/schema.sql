@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `record` (
   `material_id` BIGINT NOT NULL COMMENT '领用的耗材ID',
   `applicant` VARCHAR(50) NOT NULL COMMENT '申请人姓名/工号',
   `quantity` INT NOT NULL COMMENT '申请领用数量',
-  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '审批状态: 0-待审批, 1-已发料, 2-已驳回',
+`status` TINYINT NOT NULL DEFAULT 0 COMMENT '状态: 0-已提交待审批, 1-已通过(发料), 2-已驳回, 3-已归还',
   `remark` VARCHAR(255) COMMENT '用途说明/备注',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -90,9 +90,6 @@ INSERT INTO `user` (`username`, `password`, `real_name`, `role`) VALUES
 
 UPDATE `user` SET `password` = '$2a$10$qj5.QkR87oTJzY9nXz56nO0J32kLQFw9qKBxqiWiM2LY4SbHCYcbu' WHERE `username` = 'admin';
 UPDATE `user` SET `password` = '$2a$10$qj5.QkR87oTJzY9nXz56nO0J32kLQFw9qKBxqiWiM2LY4SbHCYcbu' WHERE `username` = 'test01';
-
-
-
 
 
 
