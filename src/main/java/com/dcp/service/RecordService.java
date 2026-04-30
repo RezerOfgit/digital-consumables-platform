@@ -1,7 +1,6 @@
 package com.dcp.service;
 
 import com.dcp.dto.ApplyDTO;
-import com.dcp.entity.Material;
 import com.dcp.entity.MaterialRecord;
 import com.dcp.exception.BusinessException;
 import com.dcp.mapper.MaterialMapper;
@@ -28,6 +27,9 @@ public class RecordService {
 
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Resource
+    private AiRiskService aiRiskService;
 
     // 这个常量必须和预热时的一致
     private static final String STOCK_KEY_PREFIX = "dcp:material:stock:";
@@ -75,5 +77,16 @@ public class RecordService {
         record.setStatus(1);
 
         recordMapper.insert(record);
+
+        // 【新增】：触发异步 AI 风控审查！
+        // 主线程走到这里，只是给线程池发了个通知，不需要等 AI 回复，直接就去 return 成功了！
+        aiRiskService.analyzeRequisitionRisk(
+                applyDTO.getApplicant(),
+                "耗材ID:"+applyDTO.getMaterialId(), // 简化演示，真实场景最好传查出来的 Name
+                applyDTO.getQuantity(),
+                applyDTO.getRemark()
+        );
     }
+
+
 }

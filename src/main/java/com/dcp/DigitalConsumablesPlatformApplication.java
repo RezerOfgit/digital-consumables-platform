@@ -2,8 +2,10 @@ package com.dcp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+@EnableAsync // 开启开启异步任务支持！
 @SpringBootApplication
 public class DigitalConsumablesPlatformApplication {
 
