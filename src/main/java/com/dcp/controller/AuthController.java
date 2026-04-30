@@ -4,7 +4,11 @@ import com.dcp.dto.LoginDTO;
 import com.dcp.dto.R;
 import com.dcp.entity.User;
 import com.dcp.mapper.UserMapper;
+import com.dcp.security.UserDetailsImpl;
 import com.dcp.utils.JwtUtils;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,24 +34,27 @@ public class AuthController {
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
+    @Resource
+    private AuthenticationManager authenticationManager;
+
     @PostMapping("/login")
     public R<Map<String, String>> login(@RequestBody LoginDTO loginDTO) {
-        // 1. 查库
-        User user = userMapper.findByUsername(loginDTO.getUsername());
-        if (user == null) return R.fail("用户不存在");
+        // 1. 让 Security 拿着账号密码去调用我们的 UserDetailsServiceImpl 进行比对
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword())
+        );
 
-        // 2. 校验密码 (注意：不能用 == 判断，必须用 encoder.matches)
-        if (!encoder.matches(loginDTO.getPassword(), user.getPassword())) {
-            return R.fail("密码错误");
-        }
+        // 2. 验证成功后，获取我们穿了马甲的 UserDetails
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        // 3. 生成 Token
-        String token = jwtUtils.createToken(user.getUsername(), user.getRole());
+        // 3. 生成 Token (注意这里可以剥离 ROLE_ 前缀)
+        String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        String token = jwtUtils.createToken(userDetails.getUsername(), role);
 
         Map<String, String> result = new HashMap<>();
         result.put("token", token);
-        result.put("username", user.getUsername());
-        result.put("role", user.getRole());
+        result.put("username", userDetails.getUsername());
+        result.put("role", role);
 
         return R.ok("登录成功", result);
     }
