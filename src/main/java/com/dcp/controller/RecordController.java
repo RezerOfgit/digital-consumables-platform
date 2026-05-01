@@ -2,9 +2,11 @@ package com.dcp.controller;
 
 import com.dcp.annotation.AuditLog;
 import com.dcp.dto.ApplyDTO;
+import com.dcp.dto.ApproveDTO;
 import com.dcp.dto.R;
 import com.dcp.service.RecordService;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,5 +37,22 @@ public class RecordController {
 
         recordService.applyMaterial(applyDTO);
         return R.ok("领用申请成功！", null);
+    }
+
+    @ApiOperation("审批领用申请 (人工/仅限 ADMIN)")
+    @PostMapping("/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    @AuditLog(module = "领用中心", action = "人工审批耗材领用")
+    public R<Void> approve(@RequestBody ApproveDTO approveDTO) {
+        // 基础参数校验
+        if (approveDTO.getRecordId() == null) {
+            return R.fail("审批记录ID不能为空");
+        }
+        if (approveDTO.getStatus() == null || (approveDTO.getStatus() != 1 && approveDTO.getStatus() != 2)) {
+            return R.fail("审批结果必须为 1-同意 或 2-驳回");
+        }
+
+        recordService.approveRecord(approveDTO);
+        return R.ok("审批完成", null);
     }
 }

@@ -1,7 +1,9 @@
 package com.dcp.service;
 
+import com.dcp.dto.ApproveDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -36,8 +38,14 @@ public class AiRiskService {
 
     private static final String API_URL = "https://api.deepseek.com/chat/completions";
 
+    // 使用 @Lazy 延迟注入，防止 RecordService 和 AiRiskService 循环依赖启动报错
+    @Resource
+    @Lazy
+    private RecordService recordService;
+
+    // 修改方法签名，把 recordId 传进来
     @Async
-    public void analyzeRequisitionRisk(String applicant, String materialName, Integer quantity, String remark) {
+    public void analyzeRequisitionRisk(Long recordId, String applicant, String materialName, Integer quantity, String remark) {
         // 1. 先校验 Key 是否配置
         if (deepseekApiKey == null || deepseekApiKey.isBlank()) {
             log.warn("DeepSeek API Key 未配置，跳过 AI 风控评估");
@@ -85,6 +93,20 @@ public class AiRiskService {
                 String aiAdvice = (String) message.get("content");
 
                 log.info("[AI 评估完成] 专家建议：\n{}", aiAdvice);
+
+                // 【AI 智能熔断】
+                if (aiAdvice.contains("高危")) {
+                    log.warn("🚨 触发 AI 熔断机制！正在自动驳回订单并退还库存...");
+
+                    ApproveDTO rejectDto = new ApproveDTO();
+                    rejectDto.setRecordId(recordId);
+                    rejectDto.setStatus(2); // 2-已驳回
+                    rejectDto.setReply("AI 智能风控自动熔断: " + aiAdvice);
+
+                    // AI 模拟管理员执行驳回操作
+                    recordService.approveRecord(rejectDto);
+                    log.info("🛡️ AI 熔断处理完毕，库存已安全退还！");
+                }
             }
         } catch (Exception e) {
             log.error("[AI 评估失败] 网络异常或 Key 错误：{}", e.getMessage());

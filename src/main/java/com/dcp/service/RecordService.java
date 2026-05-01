@@ -1,11 +1,13 @@
 package com.dcp.service;
 
 import com.dcp.dto.ApplyDTO;
+import com.dcp.dto.ApproveDTO;
 import com.dcp.entity.Material;
 import com.dcp.entity.MaterialRecord;
 import com.dcp.exception.BusinessException;
 import com.dcp.mapper.MaterialMapper;
 import com.dcp.mapper.RecordMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,7 @@ public class RecordService {
     /**
      * 提交领用申请 (核心业务)
      * @Transactional 注解保证了下面的操作要么全部成功，要么全部回滚！
+     * @param applyDTO
      */
     @Transactional(rollbackFor = Exception.class)
     public void applyMaterial(ApplyDTO applyDTO) {
@@ -88,20 +91,58 @@ public class RecordService {
         record.setApplicant(applyDTO.getApplicant());
         record.setQuantity(applyDTO.getQuantity());
         record.setRemark(applyDTO.getRemark());
+        record.setStatus(0);
 
-        // 【修改状态】从原本的 1(已发料) 修改为 0(待审批)
-        record.setStatus(1);
-
-        recordMapper.insert(record);
+        recordMapper.insert(record); // MyBatis-Plus 插入后，会自动把生成的 ID 塞回 record 对象里
 
         // 触发异步 AI 风控审查！
         // 主线程走到这里，只是给线程池发了个通知，不需要等 AI 回复，直接就去 return 成功了！
         // 4. 异步 AI 风控（复用已查询的 material 对象）
+        // 【触发 AI 熔断检查】，传入刚才生成的 record.getId()
         aiRiskService.analyzeRequisitionRisk(
+                record.getId(),
                 applyDTO.getApplicant(),
                 material.getName(),
                 applyDTO.getQuantity(),
                 applyDTO.getRemark()
         );
+
+
+    }
+
+    /**
+     * 审批领用记录（同意或驳回）
+     * @param approveDTO
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void approveRecord(ApproveDTO approveDTO) {
+        // 1. 查出这笔领用记录
+        MaterialRecord record = recordMapper.selectById(approveDTO.getRecordId());
+        if (record == null) {
+            throw new BusinessException("审批记录不存在");
+        }
+
+        // 2. 只有状态为 0 (待审批) 的记录才能被处理
+        if (record.getStatus() != 0) {
+            throw new BusinessException("该记录已处理，无法重复审批");
+        }
+
+        // 3. 更新状态和审批意见
+        record.setStatus(approveDTO.getStatus());
+        // 将原有的备注和新的审批意见拼起来
+        record.setRemark(record.getRemark() + " | [审批结果]: " + approveDTO.getReply());
+        recordMapper.updateById(record);
+
+        // 4. 【核心闭环】：如果是驳回 (status == 2)，必须归还之前预扣的库存！
+        if (approveDTO.getStatus() == 2) {
+            // 还原 MySQL 库存 (这里同样会触发 MyBatis-Plus 的乐观锁版本号累加，非常安全)
+            Material material = materialMapper.selectById(record.getMaterialId());
+            material.setStock(material.getStock() + record.getQuantity());
+            materialMapper.updateById(material);
+
+            // 还原 Redis 缓存库存
+            String redisKey = STOCK_KEY_PREFIX + record.getMaterialId();
+            redisTemplate.opsForValue().increment(redisKey, record.getQuantity());
+        }
     }
 }
