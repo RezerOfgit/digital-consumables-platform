@@ -91,7 +91,14 @@ INSERT INTO `user` (`username`, `password`, `real_name`, `role`) VALUES
 UPDATE `user` SET `password` = '$2a$10$qj5.QkR87oTJzY9nXz56nO0J32kLQFw9qKBxqiWiM2LY4SbHCYcbu' WHERE `username` = 'admin';
 UPDATE `user` SET `password` = '$2a$10$qj5.QkR87oTJzY9nXz56nO0J32kLQFw9qKBxqiWiM2LY4SbHCYcbu' WHERE `username` = 'test01';
 
+-- 给 material 表增加 version 字段，默认值为 0
+ALTER TABLE material ADD COLUMN version INT DEFAULT 0 COMMENT '乐观锁版本号';
 
+-- 确保历史数据的 version 不为 null
+UPDATE material SET version = 0 WHERE version IS NULL;
+
+UPDATE MATERIAL SET stock = 10 WHERE ID = 3;
+UPDATE material SET stock = 100, version = 0 WHERE id = 3;
 
 
 

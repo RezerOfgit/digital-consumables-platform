@@ -19,8 +19,8 @@
 <!--        VALUES (#{categoryId}, #{name}, #{specification}, #{unit}, #{stock}, #{dangerLevel}, #{storageCondition})-->
 <!--    </insert>-->
 
-    <update id="updateStock">
-        UPDATE material SET stock = stock + #{num} WHERE id = #{id}
-    </update>
+<!--    <update id="updateStock">-->
+<!--        UPDATE material SET stock = stock + #{num} WHERE id = #{id}-->
+<!--    </update>-->
 
 </mapper>

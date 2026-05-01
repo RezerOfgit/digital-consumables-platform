@@ -3,9 +3,6 @@ package com.dcp.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.dcp.entity.Material;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-
-import java.util.List;
 
 /**
  * @author Re-zero
@@ -24,7 +21,7 @@ public interface MaterialMapper extends BaseMapper<Material> {
 //
 //    int insert(Material material);
 
-    int updateStock(@Param("id") Long id, @Param("num") Integer num);
+//    int updateStock(@Param("id") Long id, @Param("num") Integer num);
 
 //    Material findById(Long id);
 }
