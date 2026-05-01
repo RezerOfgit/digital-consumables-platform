@@ -18,7 +18,7 @@ public class MaterialService {
     private MaterialMapper materialMapper;
 
     public List<Material> listAll() {
-        return materialMapper.findAll();
+        return materialMapper.selectList(null);
     }
 
     public void addMaterial(Material material) {

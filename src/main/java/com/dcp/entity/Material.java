@@ -1,5 +1,8 @@
 package com.dcp.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -13,9 +16,12 @@ import java.util.Date;
  */
 @Data
 @ApiModel(description = "耗材实体类")
+@TableName("material") // 告诉 MP 这个实体类对应数据库的 material 表
 public class Material {
 
     @ApiModelProperty(value = "主键ID", hidden = true) // hidden=true 就会在文档的入参里隐藏
+    // 告诉 MP 这是主键，且策略为数据库自增
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     @ApiModelProperty(value = "所属分类ID", required = true, example = "1")

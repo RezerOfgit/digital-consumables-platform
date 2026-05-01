@@ -79,11 +79,11 @@ public class RecordService {
 
         recordMapper.insert(record);
 
-        // 【新增】：触发异步 AI 风控审查！
+        // 触发异步 AI 风控审查！
         // 主线程走到这里，只是给线程池发了个通知，不需要等 AI 回复，直接就去 return 成功了！
 
         // 1. 先查出耗材的真实名称
-        Material material = materialMapper.findById(applyDTO.getMaterialId());
+        Material material = materialMapper.selectById(applyDTO.getMaterialId());
         String materialName = material != null ? material.getName() : "未知耗材";
 
         // 2. 再传给 AI 风控
@@ -94,6 +94,4 @@ public class RecordService {
                 applyDTO.getRemark()
         );
     }
-
-
 }

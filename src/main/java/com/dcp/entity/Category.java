@@ -1,5 +1,8 @@
 package com.dcp.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -12,9 +15,11 @@ import java.util.Date;
  */
 @Data // 自动生成 getters, setters, toString
 @ApiModel(description = "耗材分类实体")
+@TableName("category")
 public class Category {
 
     @ApiModelProperty(value = "分类主键ID", hidden = true)
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     @ApiModelProperty(value = "分类名称（如：万级洁净室防护用品）", required = true, example = "锂电池研发高危试剂")

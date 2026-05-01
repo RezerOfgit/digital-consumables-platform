@@ -34,7 +34,7 @@ public class MaterialCacheService {
     @PostConstruct
     public void initStockToRedis() {
         log.info("--- 开始进行耗材库存缓存预热 ---");
-        List<Material> list = materialMapper.findAll();
+        List<Material> list = materialMapper.selectList(null);
         for (Material material : list) {
             String redisKey = STOCK_KEY_PREFIX + material.getId();
             // 将库存数存入 Redis

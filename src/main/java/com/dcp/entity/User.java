@@ -1,5 +1,8 @@
 package com.dcp.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -12,9 +15,11 @@ import java.util.Date;
  */
 @Data
 @ApiModel(description = "系统用户实体")
+@TableName("user")
 public class User {
 
     @ApiModelProperty(value = "用户主键ID", hidden = true)
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     @ApiModelProperty(value = "登录账号", required = true, example = "admin")

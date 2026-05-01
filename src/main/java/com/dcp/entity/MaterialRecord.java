@@ -1,5 +1,8 @@
 package com.dcp.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -12,9 +15,11 @@ import java.util.Date;
  */
 @Data
 @ApiModel(description = "耗材领用记录实体")
+@TableName("record")
 public class MaterialRecord {
 
     @ApiModelProperty(value = "记录主键ID", hidden = true)
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     @ApiModelProperty(value = "领用的耗材ID", required = true, example = "1")

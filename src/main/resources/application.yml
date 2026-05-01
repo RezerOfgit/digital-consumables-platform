@@ -13,7 +13,7 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
 
-mybatis:
+mybatis-plus:
   # 打印底层 SQL，方便我们以后调试排错
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
