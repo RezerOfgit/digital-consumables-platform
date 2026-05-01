@@ -30,6 +30,10 @@ public class AiRiskService {
     @Value("${deepseek.api-key}")
     private String deepseekApiKey;
 
+    // 动态读取模型版本名称
+    @Value("${deepseek.model}")
+    private String modelName;
+
     private static final String API_URL = "https://api.deepseek.com/chat/completions";
 
     @Async
@@ -40,8 +44,9 @@ public class AiRiskService {
             return;
         }
 
-        log.info("🚀 [异步风控线程启动] 开始对 {} 领用 {} 进行 AI 风险评估...", applicant, materialName);
+        log.info("[异步风控线程启动] 开始对 {} 领用 {} 进行 AI 风险评估...", applicant, materialName);
 
+        // 后续调用 API 的逻辑
         try {
             // 1. 构造发给 AI 的提示词 (Prompt)
             String prompt = String.format(
@@ -62,26 +67,27 @@ public class AiRiskService {
             // 这里使用我们注入的 deepseekApiKey
             headers.setBearerAuth(deepseekApiKey);
 
+            // 3. 构造请求参数，使用动态注入的模型名称
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", "deepseek-v4-flash");
+            requestBody.put("model", modelName);
             requestBody.put("messages", List.of(Map.of("role", "user", "content", prompt)));
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-            // 3. 发送请求给 DeepSeek
+            // 4. 发送请求给 DeepSeek
             ResponseEntity<Map> response = restTemplate.postForEntity(API_URL, entity, Map.class);
 
-            // 4. 解析结果
+            // 5. 解析结果并输出日志
             Map<String, Object> responseBody = response.getBody();
             if (responseBody != null && responseBody.containsKey("choices")) {
                 List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
                 Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
                 String aiAdvice = (String) message.get("content");
 
-                log.info("✅ [AI 评估完成] 专家建议：\n{}", aiAdvice);
+                log.info("[AI 评估完成] 专家建议：\n{}", aiAdvice);
             }
         } catch (Exception e) {
-            log.error("❌ [AI 评估失败] 网络异常或 Key 错误：{}", e.getMessage());
+            log.error("[AI 评估失败] 网络异常或 Key 错误：{}", e.getMessage());
         }
     }
 }

@@ -6,7 +6,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/dcp?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:}  # 加回默认空值，让启动不报错，由业务代码负责降级处理，下同
 
   # 解决 Spring Boot 2.6+ 与 Swagger 2 的兼容性问题
   mvc:
@@ -37,4 +37,7 @@ redis:
 
 # AI 大模型配置
 deepseek:
+  # 使用环境变量读取，防止 Key 泄露到 GitHub
   api-key: ${DEEPSEEK_API_KEY:}
+  # 将模型名称抽取到配置文件中，方便未来一键升级
+  model: deepseek-v4-flash
