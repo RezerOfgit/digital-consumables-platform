@@ -1,5 +1,6 @@
 package com.dcp.controller;
 
+import com.dcp.annotation.AuditLog;
 import com.dcp.dto.R;
 import com.dcp.entity.Material;
 import com.dcp.service.MaterialService;
@@ -15,14 +16,15 @@ import java.util.List;
  * @author Re-zero
  * @version 1.0
  */
-@Api(tags = "📦 耗材账目管理模块") // 【新增】给整个 Controller 命名
+@Api(tags = "耗材账目管理模块") // 【新增】给整个 Controller 命名
 @RestController
 @RequestMapping("/api/material")
 public class MaterialController {
+
     @Resource
     private MaterialService materialService;
 
-    @ApiOperation("查询耗材列表 (无权限限制)") // 【新增】给具体的接口命名
+    @ApiOperation("查询耗材列表 (无权限限制)") // 给具体的接口命名
     @GetMapping("/list")
     public R<List<Material>> list() {
         return R.ok(materialService.listAll());
@@ -32,6 +34,7 @@ public class MaterialController {
     @ApiOperation("耗材入库 (仅限 ADMIN)") // 【新增】给具体的接口命名
     @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN')")
+    @AuditLog(module = "耗材管理", action = "新增耗材入库")
     public R<Void> add(@RequestBody Material material) {
         // 执行真实的入库逻辑
         materialService.addMaterial(material);
