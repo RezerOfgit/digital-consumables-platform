@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 /**
  * @author Re-zero
  * @version 1.0
+ * 测试并发
  */
 @SpringBootTest
 public class RecordServiceConcurrencyTest {

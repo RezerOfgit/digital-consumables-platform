@@ -61,8 +61,7 @@ public class RecordService {
 
         // 2. MySQL 乐观锁落盘保护
         // 使用 MyBatis-Plus 的 selectById 查出当前耗材实体（包含当前最新的 version）
-//        Material material = materialMapper.selectById(applyDTO.getMaterialId());
-        Material material = fetchMaterial(applyDTO.getMaterialId());
+        Material material = materialMapper.selectById(applyDTO.getMaterialId());
 
         if (material == null) {
             redisTemplate.opsForValue().increment(redisKey, applyDTO.getQuantity()); // 补偿 Redis
@@ -71,9 +70,6 @@ public class RecordService {
 
         // 设置扣减后的真实数据库库存
         material.setStock(material.getStock() - applyDTO.getQuantity());
-
-        // 临时让当前线程睡 50ms，给其他请求创造并发机会
-        try { Thread.sleep(50); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
 
         // 使用 updateById 触发 MyBatis-Plus 的乐观锁机制
         // 底层 SQL 会自动附带：UPDATE ... SET stock = ?, version = version + 1 WHERE id = ? AND version = 原version
@@ -85,15 +81,6 @@ public class RecordService {
             redisTemplate.opsForValue().increment(redisKey, applyDTO.getQuantity()); // 补偿 Redis
             throw new BusinessException("系统繁忙，数据库并发更新冲突，请重试！");
         }
-
-//        // 3. Redis 扣减成功后，再让 MySQL 去慢慢扣减真实库存
-//        // 这一步依然有 @Transactional 保护，如果报错，整体回滚
-//        int updatedRows = materialMapper.updateStock(applyDTO.getMaterialId(), -applyDTO.getQuantity());
-//        if (updatedRows == 0) {
-//            // 理论上只要 Redis 没问题，这里不会报错，但为了严谨还是要校验
-//            redisTemplate.opsForValue().increment(redisKey, applyDTO.getQuantity()); // 补偿 Redis
-//            throw new BusinessException("数据库落盘失败，请重试！");
-//        }
 
         //  3. 生成 MySQL 领用记录 (对接接下来的审批流)
         MaterialRecord record = new MaterialRecord();
@@ -109,21 +96,12 @@ public class RecordService {
 
         // 触发异步 AI 风控审查！
         // 主线程走到这里，只是给线程池发了个通知，不需要等 AI 回复，直接就去 return 成功了！
-
         // 4. 异步 AI 风控（复用已查询的 material 对象）
-//        aiRiskService.analyzeRequisitionRisk(
-//                applyDTO.getApplicant(),
-//                material.getName(),
-//                applyDTO.getQuantity(),
-//                applyDTO.getRemark()
-//        );
-    }
-
-    /**
-     * 单独查询耗材信息，不加事务，立刻返回。
-     * 用来绕开数据库行锁，让并发请求都能拿到同一个初始 version。
-     */
-    public Material fetchMaterial(Long materialId) {
-        return materialMapper.selectById(materialId);
+        aiRiskService.analyzeRequisitionRisk(
+                applyDTO.getApplicant(),
+                material.getName(),
+                applyDTO.getQuantity(),
+                applyDTO.getRemark()
+        );
     }
 }
