@@ -1,6 +1,7 @@
 package com.dcp.aspect;
 
 import com.dcp.annotation.AuditLog;
+import com.dcp.dto.R;
 import com.dcp.entity.SysLog;
 import com.dcp.mapper.SysLogMapper;
 import com.dcp.utils.UserContext;
@@ -12,8 +13,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-
-import static org.apache.logging.log4j.message.MapMessage.MapFormat.JSON;
 
 /**
  * @author Re-zero
@@ -42,12 +41,13 @@ public class AuditLogAspect {
         try {
             result = joinPoint.proceed();
         } catch (Throwable e) {
-            // 如果业务代码报错了，也要把错误日志记下来（可选，这里为了简单直接抛出）
+            // 如果业务报错，这里只是抛出，不做额外处理（可扩展记录错误日志）
             throw e;
         }
 
         // 2. 业务执行成功后，开始异步或者同步记录日志
         try {
+
             SysLog sysLog = new SysLog();
             // 【亮点】：通过 ThreadLocal 无侵入地获取当前操作人！业务方法的参数里根本不需要传 username！
             sysLog.setUsername(UserContext.getUser());
@@ -61,7 +61,6 @@ public class AuditLogAspect {
             // 插入数据库
             sysLogMapper.insert(sysLog);
             log.info("📝 [安全审计] 已记录操作日志: {} - {}", sysLog.getUsername(), sysLog.getAction());
-
         } catch (Exception e) {
             log.error("❌ [安全审计] 记录日志失败", e);
         }

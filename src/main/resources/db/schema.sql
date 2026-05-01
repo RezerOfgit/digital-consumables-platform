@@ -97,14 +97,18 @@ ALTER TABLE material ADD COLUMN version INT DEFAULT 0 COMMENT '乐观锁版本�
 -- 确保历史数据的 version 不为 null
 UPDATE material SET version = 0 WHERE version IS NULL;
 
-UPDATE MATERIAL SET stock = 10 WHERE ID = 3;
-UPDATE material SET stock = 100, version = 0 WHERE id = 3;
+UPDATE material SET stock = 0, version = 0 WHERE id = 3;
 
 
-
-
-
-
+CREATE TABLE `sys_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) DEFAULT NULL COMMENT '操作人',
+  `module` varchar(50) DEFAULT NULL COMMENT '操作模块',
+  `action` varchar(100) DEFAULT NULL COMMENT '动作说明',
+  `params` text COMMENT '请求参数',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统操作审计日志表';
 
 
 
