@@ -1,6 +1,7 @@
 package com.dcp.controller;
 
 import com.dcp.annotation.AuditLog;
+import com.dcp.annotation.RateLimit;
 import com.dcp.dto.*;
 import com.dcp.service.RecordService;
 import io.swagger.annotations.Api;
@@ -29,6 +30,8 @@ public class RecordController {
     @ApiOperation("耗材单品领用申请")
     @PostMapping("/apply")// 只需要这一行代码，审计日志自动生成！
     @AuditLog(module = "领用中心", action = "提交耗材领用申请")
+    // 【新增】：限制该用户 10 秒内最多只能调用 2 次
+    @RateLimit(time = 10, count = 2)
     public R<Void> apply(@Valid @RequestBody ApplyDTO applyDTO) {
 
         recordService.applyMaterial(applyDTO);
@@ -38,6 +41,8 @@ public class RecordController {
     @ApiOperation("耗材批量领用申请")
     @PostMapping("/apply-batch")
     @AuditLog(module = "领用中心", action = "提交批量耗材领用申请")
+    // 【新增】：限制该用户 15 秒内最多只能调用 2 次
+    @RateLimit(time = 15, count = 2)
     public R<Void> apply(@Valid @RequestBody BatchApplyDTO batchDTO) { // 改为 BatchApplyDTO
 
         recordService.applyBatchMaterial(batchDTO); // 调用批量方法

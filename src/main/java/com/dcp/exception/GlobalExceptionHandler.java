@@ -84,6 +84,4 @@ public class GlobalExceptionHandler {
         log.error("系统异常", e);
         return R.fail("系统内部错误");
     }
-
-
 }
