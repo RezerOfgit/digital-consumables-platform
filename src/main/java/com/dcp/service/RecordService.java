@@ -1,7 +1,9 @@
 package com.dcp.service;
 
 import com.dcp.dto.ApplyDTO;
+import com.dcp.dto.ApplyItemDTO;
 import com.dcp.dto.ApproveDTO;
+import com.dcp.dto.BatchApplyDTO;
 import com.dcp.entity.Material;
 import com.dcp.entity.MaterialRecord;
 import com.dcp.exception.BusinessException;
@@ -13,6 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Re-zero
@@ -107,8 +113,85 @@ public class RecordService {
                 applyDTO.getRemark()
         );
 
-
     }
+
+    /**
+     * 批量提交领用申请 (核心业务)
+     * @param batchDTO
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void applyBatchMaterial(BatchApplyDTO batchDTO) {
+        // 1. 准备“记账本”，用于记录已经成功扣除的 Redis 库存（用于失败时的补偿回滚）
+        Map<Long, Integer> redisRollbackMap = new HashMap<>();
+
+        // 2. 准备收集生成的记录 ID 和 AI 提示词清单
+        List<Long> generatedRecordIds = new ArrayList<>();
+        StringBuilder aiItemList = new StringBuilder();
+
+        try {
+            // 3. 开始遍历批量申请的明细
+            for (ApplyItemDTO item : batchDTO.getItems()) {
+                String redisKey = STOCK_KEY_PREFIX + item.getMaterialId();
+
+                // 【第一道防线】：Redis 原子扣减
+                Long remainStock = redisTemplate.opsForValue().decrement(redisKey, item.getQuantity());
+                if (remainStock == null) {
+                    throw new BusinessException("耗材 ID: " + item.getMaterialId() + " 缓存未命中！");
+                }
+                if (remainStock < 0) {
+                    // 当前这个扣失败了，立刻还回去
+                    redisTemplate.opsForValue().increment(redisKey, item.getQuantity());
+                    throw new BusinessException("耗材 ID: " + item.getMaterialId() + " 库存不足！");
+                }
+
+                // 扣减成功，记入小本本
+                redisRollbackMap.put(item.getMaterialId(), item.getQuantity());
+
+                // 【第二道防线】：MySQL 乐观锁落盘
+                Material material = materialMapper.selectById(item.getMaterialId());
+                if (material == null) {
+                    throw new BusinessException("数据库中不存在该耗材！");
+                }
+
+                material.setStock(material.getStock() - item.getQuantity());
+                int updatedRows = materialMapper.updateById(material);
+                if (updatedRows == 0) {
+                    throw new BusinessException("耗材 [" + material.getName() + "] 并发更新冲突，请重试！");
+                }
+
+                // 生成单条领用记录
+                MaterialRecord record = new MaterialRecord();
+                record.setMaterialId(item.getMaterialId());
+                record.setApplicant(batchDTO.getApplicant());
+                record.setQuantity(item.getQuantity());
+                record.setRemark(batchDTO.getRemark());
+                record.setStatus(0); // 待审批
+                recordMapper.insert(record);
+
+                // 收集 ID 和 拼接清单文本
+                generatedRecordIds.add(record.getId());
+                aiItemList.append(String.format("- %s (数量: %d)\n", material.getName(), item.getQuantity()));
+            }
+
+        } catch (Exception e) {
+            // 【极其核心的补偿逻辑】：如果上面的 for 循环中途报错，把已经扣掉的 Redis 库存还回去！
+            for (Map.Entry<Long, Integer> entry : redisRollbackMap.entrySet()) {
+                String rollbackKey = STOCK_KEY_PREFIX + entry.getKey();
+                redisTemplate.opsForValue().increment(rollbackKey, entry.getValue());
+            }
+            // 继续向上抛出异常，让 Spring 的 @Transactional 帮我们把 MySQL 里的数据全部撤销！
+            throw e;
+        }
+
+        // 4. 全部扣减成功后，触发 AI 综合风控预警（传入 ID 列表和拼接好的清单）
+        aiRiskService.analyzeBatchRisk(
+                generatedRecordIds,
+                batchDTO.getApplicant(),
+                batchDTO.getRemark(),
+                aiItemList.toString()
+        );
+    }
+
 
     /**
      * 审批领用记录（同意或驳回）

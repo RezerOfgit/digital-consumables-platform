@@ -1,9 +1,7 @@
 package com.dcp.controller;
 
 import com.dcp.annotation.AuditLog;
-import com.dcp.dto.ApplyDTO;
-import com.dcp.dto.ApproveDTO;
-import com.dcp.dto.R;
+import com.dcp.dto.*;
 import com.dcp.service.RecordService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,9 +23,8 @@ public class RecordController {
     @Resource
     private RecordService recordService;
 
-    @ApiOperation("耗材领用申请")
-    @PostMapping("/apply")
-    // 【点睛之笔】：只需要这一行代码，审计日志自动生成！
+    @ApiOperation("耗材单品领用申请")
+    @PostMapping("/apply")// 只需要这一行代码，审计日志自动生成！
     @AuditLog(module = "领用中心", action = "提交耗材领用申请")
     public R<Void> apply(@RequestBody ApplyDTO applyDTO) {
         // 最基础的参数校验
@@ -36,6 +33,24 @@ public class RecordController {
         }
 
         recordService.applyMaterial(applyDTO);
+        return R.ok("申请已提交，已进入风控与审批流程", null);
+    }
+
+    @ApiOperation("耗材批量领用申请")
+    @PostMapping("/apply-batch")
+    @AuditLog(module = "领用中心", action = "提交批量耗材领用申请")
+    public R<Void> apply(@RequestBody BatchApplyDTO batchDTO) { // 改为 BatchApplyDTO
+        // 基础参数校验
+        if (batchDTO.getItems() == null || batchDTO.getItems().isEmpty()) {
+            return R.fail("领用明细不能为空");
+        }
+        for (ApplyItemDTO item : batchDTO.getItems()) {
+            if (item.getQuantity() == null || item.getQuantity() <= 0) {
+                return R.fail("每个领用数量必须大于0");
+            }
+        }
+
+        recordService.applyBatchMaterial(batchDTO); // 调用批量方法
         return R.ok("申请已提交，已进入风控与审批流程", null);
     }
 

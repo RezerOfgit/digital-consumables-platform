@@ -48,16 +48,18 @@ public class AiRiskService {
     @Resource
     private ResourceLoader resourceLoader;
 
+    // ==================== 私有工具方法 ====================
 
     /**
      * 加载 AI 提示词模板
+     *
+     * @return
      */
     private String loadPromptTemplate() {
         try {
             // 【核心修复】：直接写出完整的类路径 org.springframework.core.io.Resource
             // 这样编译器就明确知道这里用的是文件资源，而不是注入注解了！
             org.springframework.core.io.Resource resource = resourceLoader.getResource("classpath:templates/ai_risk_prompt.txt");
-
             return org.springframework.util.StreamUtils.copyToString(resource.getInputStream(), java.nio.charset.StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("读取 Prompt 模板失败", e);
@@ -66,9 +68,75 @@ public class AiRiskService {
         }
     }
 
-    // 修改方法签名，把 recordId 传进来
+    /**
+     * 【公共方法】发送请求给 DeepSeek 并返回 AI 回复文本
+     *
+     * @param prompt
+     * @return
+     */
+    private String callDeepSeek(String prompt) {
+
+        // 1. 构造 HTTP 请求头和参数
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        // 这里使用我们注入的 deepseekApiKey
+        headers.setBearerAuth(deepseekApiKey);
+
+        // 2. 构造请求参数，使用动态注入的模型名称
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", modelName);
+        requestBody.put("messages", List.of(Map.of("role", "user", "content", prompt)));
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        // 3. 发送请求给 DeepSeek
+        ResponseEntity<Map> response = restTemplate.postForEntity(API_URL, entity, Map.class);
+
+        // 4. 解析结果并输出日志
+        Map<String, Object> responseBody = response.getBody();
+        if (responseBody != null && responseBody.containsKey("choices")) {
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                if (message != null && message.containsKey("content")) {
+                    // 用 String.valueOf 避免 ClassCastException
+                    return String.valueOf(message.get("content"));
+                }
+            }
+        }
+        return "";
+    }
+
+    /**
+     * 【公共方法】执行熔断：驳回指定的领用记录
+     */
+    private void executeCircuitBreaker(List<Long> recordIds, String aiAdvice) {
+        log.warn("[AI 熔断] 正在自动驳回 {} 条订单并退还库存...", recordIds.size());
+        for (Long recordId : recordIds) {
+            ApproveDTO rejectDto = new ApproveDTO();
+            rejectDto.setRecordId(recordId);
+            rejectDto.setStatus(2);
+            rejectDto.setReply("AI 智能风控自动熔断: " + aiAdvice);
+            // AI 模拟管理员执行驳回操作
+            recordService.approveRecord(rejectDto);
+        }
+        log.info("[AI 熔断] 处理完毕，库存已安全退还！");
+    }
+
+    // ==================== 风控方法 ====================
+
+    /**
+     * 单种耗材风控
+     *
+     * @param recordId
+     * @param applicant
+     * @param materialName
+     * @param quantity
+     * @param remark
+     */
     @Async
     public void analyzeRequisitionRisk(Long recordId, String applicant, String materialName, Integer quantity, String remark) {
+
         // 1. 先校验 Key 是否配置
         if (deepseekApiKey == null || deepseekApiKey.isBlank()) {
             log.warn("DeepSeek API Key 未配置，跳过 AI 风控评估");
@@ -79,73 +147,56 @@ public class AiRiskService {
 
         // 后续调用 API 的逻辑
         try {
-            // 1. 构造发给 AI 的提示词 (Prompt)
-//            String prompt = String.format(
-//                    "【角色】你是实验室安全专家，熟悉 10万+ 化学品 MSDS 数据。\n" +
-//                            "【任务】实验员 '%s' 申请领用 \"%s\"，数量 %d %s，用途说明：\"%s\"。\n" +
-//                            "请执行以下步骤：\n" +
-//                            "1. 精准识别该化学品的物理化学特性及主要危害。\n" +
-//                            "2. 根据用途说明，判断该操作是否存在配伍禁忌或违规操作。\n" +
-//                            "3. 如果存在风险，用一句话（不超过40字）指出具体危害（必须提及该化学品的具体名称和特性）。\n" +
-//                            "4. 用一句话（不超过40字）给出可执行的安全建议。\n" +
-//                            "【输出格式】风险等级：[高危/中危/低危/安全]；危害描述：[xxx]；安全建议：[xxx]。",
-//                    applicant, materialName, quantity, "瓶", remark
-//            );
+            // 1. 加载外部模板并构造发给 AI 的提示词 (Prompt)
+            String template = loadPromptTemplate(); // 复用同一个模板
 
-            String prompt = String.format(
-                    "【角色】你是实验室安全专家，熟悉 10万+ 化学品 MSDS 数据。\n" +
-                            "【任务】实验员 '%s' 刚刚在短时间内申请领用了多种化学品组合，包括：%s，数量 %d %s，用途说明：\"%s\"。\n" +
-                            "请执行以下步骤：\n" +
-                            "1. 精准识别所有化学品的物理化学特性及主要危害。\n" +
-                            "2. 判断该化学品组合是否存在配伍禁忌（如强氧化剂+易燃有机物、酸碱中和剧烈放热等），或操作是否严重违规。\n" +
-                            "3. 如果存在风险，用一句话（不超过40字）指出具体危害。\n" +
-                            "4. 用一句话（不超过40字）给出可执行的安全建议。\n" +
-                            "5. 如果判断该操作极其危险，请务必在回答中包含【高危拦截】四个字。\n" +
-                            "【输出格式】风险等级：[高危/中危/低危/安全]；危害描述：[xxx]；安全建议：[xxx]。",
-                    applicant, materialName, quantity, "瓶", remark
-            );
+            // 2. 核心优化：把单品信息组装成批量模板需要的“清单”格式
+            String singleItemList = String.format("- %s (数量: %d)", materialName, quantity);
 
-            // 2. 构造 HTTP 请求头和参数
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            // 这里使用我们注入的 deepseekApiKey
-            headers.setBearerAuth(deepseekApiKey);
+            // 3. 填充模板：applicant, remark, 单品种组装的清单
+            String prompt = String.format(template, applicant, remark, singleItemList);
 
-            // 3. 构造请求参数，使用动态注入的模型名称
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", modelName);
-            requestBody.put("messages", List.of(Map.of("role", "user", "content", prompt)));
+            String aiAdvice = callDeepSeek(prompt);
+            log.info("[AI 评估完成] 专家建议：\n{}", aiAdvice);
 
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-
-            // 4. 发送请求给 DeepSeek
-            ResponseEntity<Map> response = restTemplate.postForEntity(API_URL, entity, Map.class);
-
-            // 5. 解析结果并输出日志
-            Map<String, Object> responseBody = response.getBody();
-            if (responseBody != null && responseBody.containsKey("choices")) {
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
-                Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-                String aiAdvice = (String) message.get("content");
-
-                log.info("[AI 评估完成] 专家建议：\n{}", aiAdvice);
-
-                // 【AI 智能熔断】
-                if (aiAdvice.contains("高危")) {
-                    log.warn("🚨 触发 AI 熔断机制！正在自动驳回订单并退还库存...");
-
-                    ApproveDTO rejectDto = new ApproveDTO();
-                    rejectDto.setRecordId(recordId);
-                    rejectDto.setStatus(2); // 2-已驳回
-                    rejectDto.setReply("AI 智能风控自动熔断: " + aiAdvice);
-
-                    // AI 模拟管理员执行驳回操作
-                    recordService.approveRecord(rejectDto);
-                    log.info("🛡️ AI 熔断处理完毕，库存已安全退还！");
-                }
+            // 【AI 智能熔断】
+            if (aiAdvice.contains("高危")) {
+                executeCircuitBreaker(List.of(recordId), aiAdvice);
             }
+        } catch (java.util.IllegalFormatException e) {
+            log.error("[AI 模板错误] 提示词模板占位符与参数类型不匹配，请检查 ai_risk_prompt.txt 文件！详细原因：{}", e.getMessage());
         } catch (Exception e) {
             log.error("[AI 评估失败] 网络异常或 Key 错误：{}", e.getMessage());
+        }
+    }
+
+    /**
+     * 批量耗材综合风控
+     *
+     * @param recordIds
+     * @param applicant
+     * @param remark
+     * @param aiItemListStr
+     */
+    @Async
+    public void analyzeBatchRisk(List<Long> recordIds, String applicant, String remark, String aiItemListStr) {
+        log.info("[异步风控线程启动] 开始对 {} 个耗材进行 AI 批量综合风控...", recordIds.size());
+
+        try {
+            // 1. 加载外部模板
+            String template = loadPromptTemplate();
+
+            // 2. 将数据填入模板 (%s 按顺序替换)
+            String prompt = String.format(template, applicant, remark, aiItemListStr);
+
+            String aiAdvice = callDeepSeek(prompt);
+            log.info("[AI 综合评估完成] 专家建议：\n{}", aiAdvice);
+
+            if (aiAdvice.contains("高危")) {
+                executeCircuitBreaker(recordIds, aiAdvice);
+            }
+        } catch (Exception e) {
+            log.error("[AI 批量评估失败] {}", e.getMessage());
         }
     }
 }
