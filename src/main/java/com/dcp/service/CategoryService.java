@@ -39,12 +39,17 @@ public class CategoryService {
      * @return
      */
     public List<Category> getAllCategories() {
+
+        long start = System.currentTimeMillis();
+
         try {
             // 1. 尝试从 Redis 缓存中获取
             String cacheData = stringRedisTemplate.opsForValue().get(CATEGORY_LIST_CACHE_KEY);
 
             if (StringUtils.hasText(cacheData)) {
-                log.info("命中分类列表缓存");
+//                log.info("命中分类列表缓存");
+                long end = System.currentTimeMillis();
+                log.info("命中分类列表缓存, 耗时: {}ms", end - start);
                 return objectMapper.readValue(cacheData, new TypeReference<List<Category>>() {});
             }
         } catch (Exception e) {
@@ -54,7 +59,7 @@ public class CategoryService {
 
         // 2. 缓存未命中，查询 MySQL
         log.info("分类缓存未命中，执行数据库查询");
-        List<Category> categoryList = categoryMapper.selectList(new QueryWrapper<>()); // 假设使用 MyBatis-Plus
+        List<Category> categoryList = categoryMapper.selectList(new QueryWrapper<>());
 
         // 3. 查询结果回写 Redis，设置 24 小时过期
         try {
@@ -66,6 +71,8 @@ public class CategoryService {
             log.error("回写分类缓存失败", e);
         }
 
+        long end = System.currentTimeMillis();
+        log.info("分类列表查询耗时: {}ms", end - start);
         return categoryList;
     }
 
