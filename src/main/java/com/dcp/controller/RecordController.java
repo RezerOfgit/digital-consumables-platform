@@ -3,6 +3,7 @@ package com.dcp.controller;
 import com.dcp.annotation.AuditLog;
 import com.dcp.dto.*;
 import com.dcp.service.RecordService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,11 +12,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 
 /**
  * @author Re-zero
  * @version 1.0
  */
+@Api(tags = "领用记录管理模块")
 @RestController
 @RequestMapping("/api/record")
 public class RecordController {
@@ -26,11 +29,7 @@ public class RecordController {
     @ApiOperation("耗材单品领用申请")
     @PostMapping("/apply")// 只需要这一行代码，审计日志自动生成！
     @AuditLog(module = "领用中心", action = "提交耗材领用申请")
-    public R<Void> apply(@RequestBody ApplyDTO applyDTO) {
-        // 最基础的参数校验
-        if (applyDTO.getQuantity() == null || applyDTO.getQuantity() <= 0) {
-            return R.fail("领用数量必须大于0");
-        }
+    public R<Void> apply(@Valid @RequestBody ApplyDTO applyDTO) {
 
         recordService.applyMaterial(applyDTO);
         return R.ok("申请已提交，已进入风控与审批流程", null);
@@ -39,16 +38,7 @@ public class RecordController {
     @ApiOperation("耗材批量领用申请")
     @PostMapping("/apply-batch")
     @AuditLog(module = "领用中心", action = "提交批量耗材领用申请")
-    public R<Void> apply(@RequestBody BatchApplyDTO batchDTO) { // 改为 BatchApplyDTO
-        // 基础参数校验
-        if (batchDTO.getItems() == null || batchDTO.getItems().isEmpty()) {
-            return R.fail("领用明细不能为空");
-        }
-        for (ApplyItemDTO item : batchDTO.getItems()) {
-            if (item.getQuantity() == null || item.getQuantity() <= 0) {
-                return R.fail("每个领用数量必须大于0");
-            }
-        }
+    public R<Void> apply(@Valid @RequestBody BatchApplyDTO batchDTO) { // 改为 BatchApplyDTO
 
         recordService.applyBatchMaterial(batchDTO); // 调用批量方法
         return R.ok("申请已提交，已进入风控与审批流程", null);

@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -17,5 +18,6 @@ import java.util.List;
 public class BatchApplyDTO extends BaseApplyDTO {
 
     @ApiModelProperty(value = "申请耗材明细列表", required = true)
+    @Valid
     private List<ApplyItemDTO> items;
 }
