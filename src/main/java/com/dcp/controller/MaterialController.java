@@ -13,10 +13,11 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
+ * 耗材账目管理控制器
  * @author Re-zero
  * @version 1.0
  */
-@Api(tags = "耗材账目管理模块") // 【新增】给整个 Controller 命名
+@Api(tags = "耗材账目管理模块")
 @RestController
 @RequestMapping("/api/material")
 public class MaterialController {
@@ -24,19 +25,23 @@ public class MaterialController {
     @Resource
     private MaterialService materialService;
 
-    @ApiOperation("查询耗材列表 (无权限限制)") // 给具体的接口命名
+    @ApiOperation("查询耗材列表 (无权限限制)")
     @GetMapping("/list")
     public R<List<Material>> list() {
         return R.ok(materialService.listAll());
     }
 
-    // 真正的耗材入库接口：只有 ADMIN 角色才能访问！
-    @ApiOperation("耗材入库 (仅限 ADMIN)") // 【新增】给具体的接口命名
+    /**
+     * 耗材入库，仅限管理员操作
+     * @param material
+     * @return
+     */
+    @ApiOperation("耗材入库 (仅限 ADMIN)")
     @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN')")
     @AuditLog(module = "耗材管理", action = "新增耗材入库")
     public R<Void> add(@RequestBody Material material) {
-        // 执行真实的入库逻辑
+
         materialService.addMaterial(material);
         return R.ok("耗材入库成功", null);
     }

@@ -5,16 +5,15 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
+ * 统一响应结果封装类
  * @author Re-zero
  * @version 1.0
- * 统一响应结果封装类
  */
 @Data
 public class R<T> implements Serializable {
     private static final long serialVersionUID = 1L;
+
     private int code;
-    //对于 R.java，你可以把 Integer code 改成 int code，但一般不加 final，
-    // 因为在某些极端场景下框架在反序列化 JSON 时可能会需要调用无参构造再 set 值。
     private String message;
     private T data;
 

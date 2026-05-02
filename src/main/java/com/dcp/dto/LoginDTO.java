@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
+ * 用户登录请求参数
  * @author Re-zero
  * @version 1.0
  */

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 /**
+ * 用户认证服务：根据用户名查询数据库并转换为 Security 认证对象
  * @author Re-zero
  * @version 1.0
  */
@@ -21,12 +22,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // 1. 去数据库查出真实的 User
         User user = userMapper.findByUsername(username);
         if (user == null) {
             throw new UsernameNotFoundException("找不到该用户: " + username);
         }
-        // 2. 穿上马甲，转换成 Security 认识的 UserDetails
+        // 转换为 Spring Security 可识别的 UserDetails 对象
         return UserDetailsImpl.build(user);
     }
 }

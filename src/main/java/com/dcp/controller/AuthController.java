@@ -2,7 +2,6 @@ package com.dcp.controller;
 
 import com.dcp.dto.LoginDTO;
 import com.dcp.dto.R;
-import com.dcp.entity.User;
 import com.dcp.mapper.UserMapper;
 import com.dcp.security.UserDetailsImpl;
 import com.dcp.utils.JwtUtils;
@@ -20,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 认证控制器：登录接口及 Token 签发
  * @author Re-zero
  * @version 1.0
  */
@@ -29,6 +29,7 @@ public class AuthController {
 
     @Resource
     private UserMapper userMapper;
+
     @Resource
     private JwtUtils jwtUtils;
 
@@ -37,17 +38,22 @@ public class AuthController {
     @Resource
     private AuthenticationManager authenticationManager;
 
+    /**
+     * 用户登录，验证通过后签发 JWT Token
+     * @param loginDTO
+     * @return
+     */
     @PostMapping("/login")
     public R<Map<String, String>> login(@RequestBody LoginDTO loginDTO) {
-        // 1. 让 Security 拿着账号密码去调用我们的 UserDetailsServiceImpl 进行比对
+        // 1. 由 Security 框架调用 UserDetailsServiceImpl 完成密码比对
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword())
         );
 
-        // 2. 验证成功后，获取我们穿了马甲的 UserDetails
+        // 2. 认证通过，取出自定义的 UserDetails 实现
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        // 3. 生成 Token (注意这里可以剥离 ROLE_ 前缀)
+        // 3. 生成 Token，剥离 ROLE_ 前缀后存入
         String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
         String token = jwtUtils.createToken(userDetails.getUsername(), role);
 

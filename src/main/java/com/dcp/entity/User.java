@@ -10,6 +10,7 @@ import lombok.Data;
 import java.util.Date;
 
 /**
+ * 系统用户实体
  * @author Re-zero
  * @version 1.0
  */

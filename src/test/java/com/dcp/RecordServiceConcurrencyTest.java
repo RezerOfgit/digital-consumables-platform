@@ -11,9 +11,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
+ * 并发测试：40 线程同时扣减同一耗材库存，验证 Redis 预扣 + MySQL 乐观锁是否防超卖
  * @author Re-zero
  * @version 1.0
- * 测试并发
  */
 @SpringBootTest
 public class RecordServiceConcurrencyTest {

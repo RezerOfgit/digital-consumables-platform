@@ -8,6 +8,7 @@ import lombok.Data;
 import java.util.Date;
 
 /**
+ * 系统操作日志实体
  * @author Re-zero
  * @version 1.0
  */

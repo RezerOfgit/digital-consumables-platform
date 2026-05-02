@@ -10,6 +10,7 @@ import lombok.Data;
 import java.util.Date;
 
 /**
+ * 耗材领用记录实体
  * @author Re-zero
  * @version 1.0
  */

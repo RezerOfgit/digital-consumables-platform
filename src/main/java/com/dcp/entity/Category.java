@@ -10,10 +10,11 @@ import lombok.Data;
 import java.util.Date;
 
 /**
+ * 耗材分类实体
  * @author Re-zero
  * @version 1.0
  */
-@Data // 自动生成 getters, setters, toString
+@Data
 @ApiModel(description = "耗材分类实体")
 @TableName("category")
 public class Category {

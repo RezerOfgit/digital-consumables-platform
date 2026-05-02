@@ -9,11 +9,12 @@ import javax.validation.Valid;
 import java.util.List;
 
 /**
+ * 批量耗材领用申请 DTO
  * @author Re-zero
  * @version 1.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true) // 继承父类字段需显式声明
 @ApiModel(description = "批量耗材领用申请")
 public class BatchApplyDTO extends BaseApplyDTO {
 

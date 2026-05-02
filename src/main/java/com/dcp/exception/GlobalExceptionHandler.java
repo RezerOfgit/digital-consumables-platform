@@ -3,6 +3,7 @@ package com.dcp.exception;
 import com.dcp.dto.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -10,14 +11,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 import java.util.stream.Collectors;
-import org.springframework.security.access.AccessDeniedException; // 别忘了导包
 
 /**
+ * 全局异常处理器：拦截异常并包装为统一 JSON 响应
  * @author Re-zero
  * @version 1.0
- * 全局异常处理器
- * 作用：拦截系统抛出的所有异常，包装成统一的 JSON 格式返回给前端
  */
 @Slf4j
 @RestControllerAdvice
@@ -73,7 +73,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)   // HTTP 403
     public R<Void> handleAccessDeniedException(AccessDeniedException e) {
         log.warn("权限不足: {}", e.getMessage());
-        return R.fail(403, "抱歉，您的角色权限不足，拒绝访问！");  // 业务码也建议用 403
+        return R.fail(403, "抱歉，您的角色权限不足，拒绝访问！");
     }
 
     // ==================== 系统兜底 ====================

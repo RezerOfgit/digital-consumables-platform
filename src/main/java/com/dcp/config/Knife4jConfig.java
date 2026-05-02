@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Knife4j 配置：API 文档及全局 Token 支持
  * @author Re-zero
  * @version 1.0
  */
@@ -32,7 +33,6 @@ public class Knife4jConfig {
                         .version("V1.0")
                         .build())
                 .select()
-                // 指定要扫描的 Controller 包路径 (改成你的包名)
                 .apis(RequestHandlerSelectors.basePackage("com.dcp.controller"))
                 .paths(PathSelectors.any())
                 .build()
@@ -41,14 +41,14 @@ public class Knife4jConfig {
                 .securityContexts(securityContexts());
     }
 
-    // 设置请求头中需要带 Authorization
+    // 请求头中需要携带 Authorization
     private List<SecurityScheme> securitySchemes() {
         List<SecurityScheme> apiKeyList = new ArrayList<>();
         apiKeyList.add(new ApiKey("Authorization", "Authorization", "header"));
         return apiKeyList;
     }
 
-    // 设置需要携带 Token 的全局路径（这里设置除了登录之外的所有接口）
+    // 需要携带 Token 的路径（排除登录接口）
     private List<SecurityContext> securityContexts() {
         List<SecurityContext> securityContexts = new ArrayList<>();
         securityContexts.add(

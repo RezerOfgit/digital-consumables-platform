@@ -6,9 +6,9 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 
 /**
+ * 领用申请的公共基础 DTO
  * @author Re-zero
  * @version 1.0
- * 领用申请的公共基础 DTO
  */
 @Data
 public class BaseApplyDTO {

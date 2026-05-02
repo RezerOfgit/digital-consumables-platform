@@ -6,17 +6,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 接口限流注解
  * @author Re-zero
  * @version 1.0
- * 接口限流注解
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RateLimit {
 
-    // 限流时间窗口（单位：秒），默认 60 秒
-    int time() default 60;
+    int time() default 60; // 限流时间窗口，单位：秒
 
-    // 时间窗口内允许的最大访问次数，默认 5 次
-    int count() default 5;
+    int count() default 5; // 时间窗口内允许的最大访问次数
 }

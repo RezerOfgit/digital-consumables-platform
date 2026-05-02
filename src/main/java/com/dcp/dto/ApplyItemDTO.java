@@ -7,6 +7,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 /**
+ * 批量领用申请中的单条耗材项
  * @author Re-zero
  * @version 1.0
  */

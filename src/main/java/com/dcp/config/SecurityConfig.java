@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import javax.annotation.Resource;
 
 /**
+ * Spring Security 配置：JWT 认证 + RBAC 鉴权
  * @author Re-zero
  * @version 1.0
  */
@@ -25,9 +26,8 @@ import javax.annotation.Resource;
 public class SecurityConfig {
 
     @Resource
-    private JwtAuthenticationFilter jwtAuthenticationFilter; // 注入我们刚写的保安
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    // 1. 声明 BCrypt 密码编码器，告诉 Spring Security 我们的密码算法
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -44,20 +44,20 @@ public class SecurityConfig {
                 .antMatchers("/doc.html", "/webjars/**", "/swagger-resources/**", "/v2/api-docs").permitAll()
                 .anyRequest().authenticated();
 
-        // 【极其关键的一步】：把我们的 JWT 保安，安插在 Spring Security 原生的账号密码保安之前！
-        // 也就是告诉系统：别去查什么 Session 账号密码了，先看我的 JWT 票据！
+        // 将 JWT 过滤器置于 UsernamePasswordAuthenticationFilter 之前，优先走 Token 认证
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     /**
-     * 获取并暴露 AuthenticationManager
-     * (Spring Security 5.7+ 的标准做法)
+     * 暴露 AuthenticationManager，Spring Security 5.7+ 标准做法
+     * @param authenticationConfiguration
+     * @return
+     * @throws Exception
      */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        // 直接从认证配置对象中获取真实的认证管理器
         return authenticationConfiguration.getAuthenticationManager();
     }
 }

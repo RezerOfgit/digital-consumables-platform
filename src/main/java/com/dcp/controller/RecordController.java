@@ -2,7 +2,10 @@ package com.dcp.controller;
 
 import com.dcp.annotation.AuditLog;
 import com.dcp.annotation.RateLimit;
-import com.dcp.dto.*;
+import com.dcp.dto.ApplyDTO;
+import com.dcp.dto.ApproveDTO;
+import com.dcp.dto.BatchApplyDTO;
+import com.dcp.dto.R;
 import com.dcp.service.RecordService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,6 +19,7 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 
 /**
+ * 领用记录管理控制器：单品/批量领用及审批
  * @author Re-zero
  * @version 1.0
  */
@@ -27,34 +31,46 @@ public class RecordController {
     @Resource
     private RecordService recordService;
 
+    /**
+     * 耗材单品领用申请
+     * @param applyDTO
+     * @return
+     */
     @ApiOperation("耗材单品领用申请")
-    @PostMapping("/apply")// 只需要这一行代码，审计日志自动生成！
+    @PostMapping("/apply")
     @AuditLog(module = "领用中心", action = "提交耗材领用申请")
-    // 【新增】：限制该用户 10 秒内最多只能调用 2 次
-    @RateLimit(time = 10, count = 2)
+    @RateLimit(time = 10, count = 2)// 限制该用户 10 秒内最多只能调用 2 次
     public R<Void> apply(@Valid @RequestBody ApplyDTO applyDTO) {
 
         recordService.applyMaterial(applyDTO);
         return R.ok("申请已提交，已进入风控与审批流程", null);
     }
 
+    /**
+     * 耗材批量领用申请
+     * @param batchDTO
+     * @return
+     */
     @ApiOperation("耗材批量领用申请")
     @PostMapping("/apply-batch")
     @AuditLog(module = "领用中心", action = "提交批量耗材领用申请")
-    // 【新增】：限制该用户 15 秒内最多只能调用 2 次
-    @RateLimit(time = 15, count = 2)
-    public R<Void> apply(@Valid @RequestBody BatchApplyDTO batchDTO) { // 改为 BatchApplyDTO
+    @RateLimit(time = 15, count = 2) // 限制该用户 15 秒内最多只能调用 2 次
+    public R<Void> apply(@Valid @RequestBody BatchApplyDTO batchDTO) {
 
         recordService.applyBatchMaterial(batchDTO); // 调用批量方法
         return R.ok("申请已提交，已进入风控与审批流程", null);
     }
 
+    /**
+     * 审批领用申请，仅限管理员
+     * @param approveDTO
+     * @return
+     */
     @ApiOperation("审批领用申请 (人工/仅限 ADMIN)")
     @PostMapping("/approve")
     @PreAuthorize("hasRole('ADMIN')")
     @AuditLog(module = "领用中心", action = "人工审批耗材领用")
     public R<Void> approve(@RequestBody ApproveDTO approveDTO) {
-        // 基础参数校验
         if (approveDTO.getRecordId() == null) {
             return R.fail("审批记录ID不能为空");
         }

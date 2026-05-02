@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
+ * 审批操作请求参数
  * @author Re-zero
  * @version 1.0
  */

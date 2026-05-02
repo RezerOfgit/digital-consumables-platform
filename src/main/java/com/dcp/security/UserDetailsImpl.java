@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
+ * Spring Security 用户详情实现：封装认证用户信息及角色
  * @author Re-zero
  * @version 1.0
  */
@@ -23,8 +24,13 @@ public class UserDetailsImpl implements UserDetails {
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
 
+    /**
+     * 将数据库 User 实体转换为 Security 认证对象
+     * @param user
+     * @return
+     */
     public static UserDetailsImpl build(User user) {
-        // 标准化角色前缀
+        // 根据角色拼接 ROLE_ 前缀，Spring Security 鉴权规范要求
         String role = user.getRole().equals("ADMIN") ? "ROLE_ADMIN" : "ROLE_USER";
         return new UserDetailsImpl(
                 user.getId(),
@@ -35,11 +41,22 @@ public class UserDetailsImpl implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonExpired() { return true; }
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isEnabled() {
+        return true;
+    }
 }
