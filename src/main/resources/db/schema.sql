@@ -97,7 +97,7 @@ ALTER TABLE material ADD COLUMN version INT DEFAULT 0 COMMENT '乐观锁版本�
 -- 确保历史数据的 version 不为 null
 UPDATE material SET version = 0 WHERE version IS NULL;
 
-UPDATE material SET stock = 0, version = 0 WHERE id = 3;
+UPDATE material SET stock = 100, version = 0 WHERE id = 3;
 
 
 CREATE TABLE `sys_log` (
@@ -110,7 +110,13 @@ CREATE TABLE `sys_log` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统操作审计日志表';
 
+-- 强氧化剂（高危试剂）
+INSERT INTO `material` (`category_id`, `name`, `specification`, `unit`, `stock`, `danger_level`, `storage_condition`) VALUES
+(3, '硝酸 (HNO₃)', '65%-500ml/瓶', '瓶', 20, 3, '专用防腐柜，远离有机物');
 
+-- 易燃有机物（中危试剂）
+INSERT INTO `material` (`category_id`, `name`, `specification`, `unit`, `stock`, `danger_level`, `storage_condition`) VALUES
+(2, '无水乙醇 (C₂H₅OH)', 'AR-500ml/瓶', '瓶', 50, 1, '密封远离火源');
 
 
 

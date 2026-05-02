@@ -36,7 +36,7 @@ public class RecordController {
         }
 
         recordService.applyMaterial(applyDTO);
-        return R.ok("领用申请成功！", null);
+        return R.ok("申请已提交，已进入风控与审批流程", null);
     }
 
     @ApiOperation("审批领用申请 (人工/仅限 ADMIN)")
