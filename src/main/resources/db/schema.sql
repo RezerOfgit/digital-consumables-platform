@@ -1,76 +1,15 @@
 -- =====================================================
 -- 数字化耗材管控平台 (DCP) 数据库初始化脚本
 -- 版本: V1.0
--- 包含: 用户、分类、耗材、库存流水、审计日志
+-- 包含: 用户、分类、耗材、领用记录、审计日志、库存流水
 -- =====================================================
 
--- 1. 建库
 CREATE DATABASE IF NOT EXISTS `dcp` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-
 USE `dcp`;
 
--- 创建耗材分类表
-CREATE TABLE `category` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `name` VARCHAR(50) NOT NULL COMMENT '分类名称',
-  `sort` INT DEFAULT 0 COMMENT '排序权重',
-  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='耗材分类表';
+-- ==================== 基础数据表 ====================
 
--- 插入真实的分类数据
-INSERT INTO `category` (`id`, `name`, `sort`) VALUES
-(1, '万级洁净室防护用品', 10),
-(2, 'PI中试线专用原料', 20),
-(3, '锂电池研发高危试剂', 30);
-
-SELECT * FROM CATEGORY C ;
-
-
-USE `dcp`;
-
-CREATE TABLE IF NOT EXISTS `material` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `category_id` BIGINT NOT NULL COMMENT '所属分类ID',
-  `name` VARCHAR(100) NOT NULL COMMENT '耗材名称',
-  `specification` VARCHAR(50) COMMENT '规格型号',
-  `unit` VARCHAR(20) NOT NULL COMMENT '计量单位',
-  `stock` INT NOT NULL DEFAULT 0 COMMENT '当前库存量',
-  `danger_level` INT NOT NULL DEFAULT 0 COMMENT '危险等级: 0-普通, 1-低危, 2-高危, 3-致命',
-  `storage_condition` VARCHAR(100) COMMENT '存储条件',
-  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_category_id` (`category_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='耗材详情表';
-
--- 预插入几条硬核数据，方便等下直接测试查询接口
-INSERT INTO `material` (`category_id`, `name`, `specification`, `unit`, `stock`, `danger_level`, `storage_condition`) VALUES
-(1, '丁腈无尘手套', '9寸-麻面-M码', '箱', 120, 0, '常温避光'),
-(2, '均苯四甲酸二酐 (PMDA)', '纯度≥99.5%', 'kg', 50, 1, '密封防潮'),
-(3, '氢氟酸 (HF)', '49%-500ml/瓶', '瓶', 30, 3, '专用防腐柜，双人双锁');
-
-USE `dcp`;
-
--- 创建领用记录表 (本质就是订单表)
-CREATE TABLE IF NOT EXISTS `record` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `material_id` BIGINT NOT NULL COMMENT '领用的耗材ID',
-  `applicant` VARCHAR(50) NOT NULL COMMENT '申请人姓名/工号',
-  `quantity` INT NOT NULL COMMENT '申请领用数量',
-`status` TINYINT NOT NULL DEFAULT 0 COMMENT '状态: 0-已提交待审批, 1-已通过(发料), 2-已驳回, 3-已归还',
-  `remark` VARCHAR(255) COMMENT '用途说明/备注',
-  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
-  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  KEY `idx_material_id` (`material_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='领用记录表';
-
-USE `dcp`;
-
--- 创建用户表
+-- 用户表
 CREATE TABLE IF NOT EXISTS `user` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `username` VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
@@ -81,62 +20,95 @@ CREATE TABLE IF NOT EXISTS `user` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户信息表';
 
--- 预插两个用户 (注意：这里密码是明文，等下我们用代码加密)
--- 账号：admin / 密码：123456
--- 账号：test01 / 密码：123456
+-- 管理员 admin，实验员 test01，初始密码均为 123456
 INSERT INTO `user` (`username`, `password`, `real_name`, `role`) VALUES
-('admin', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.vK5SBy6O5fTfyWq9lE.0.O.', '系统管理员', 'ADMIN'),
-('test01', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.vK5SBy6O5fTfyWq9lE.0.O.', '实验员-张三', 'USER');
+('admin', '$2a$10$qj5.QkR87oTJzY9nXz56nO0J32kLQFw9qKBxqiWiM2LY4SbHCYcbu', '系统管理员', 'ADMIN'),
+('test01', '$2a$10$qj5.QkR87oTJzY9nXz56nO0J32kLQFw9qKBxqiWiM2LY4SbHCYcbu', '实验员-张三', 'USER');
 
-UPDATE `user` SET `password` = '$2a$10$qj5.QkR87oTJzY9nXz56nO0J32kLQFw9qKBxqiWiM2LY4SbHCYcbu' WHERE `username` = 'admin';
-UPDATE `user` SET `password` = '$2a$10$qj5.QkR87oTJzY9nXz56nO0J32kLQFw9qKBxqiWiM2LY4SbHCYcbu' WHERE `username` = 'test01';
+-- 耗材分类表
+CREATE TABLE IF NOT EXISTS `category` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `name` VARCHAR(50) NOT NULL COMMENT '分类名称',
+  `sort` INT DEFAULT 0 COMMENT '排序权重',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='耗材分类表';
 
--- 给 material 表增加 version 字段，默认值为 0
-ALTER TABLE material ADD COLUMN version INT DEFAULT 0 COMMENT '乐观锁版本号';
+INSERT INTO `category` (`id`, `name`, `sort`) VALUES
+(1, '万级洁净室防护用品', 10),
+(2, 'PI中试线专用原料', 20),
+(3, '锂电池研发高危试剂', 30);
 
--- 确保历史数据的 version 不为 null
-UPDATE material SET version = 0 WHERE version IS NULL;
+-- ==================== 核心业务表 ====================
 
-UPDATE material SET stock = 100, version = 0 WHERE id = 3;
+-- 耗材库存主表
+CREATE TABLE IF NOT EXISTS `material` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `category_id` BIGINT NOT NULL COMMENT '所属分类ID',
+  `name` VARCHAR(100) NOT NULL COMMENT '耗材名称',
+  `specification` VARCHAR(50) COMMENT '规格型号',
+  `unit` VARCHAR(20) NOT NULL COMMENT '计量单位',
+  `stock` INT NOT NULL DEFAULT 0 COMMENT '当前库存量',
+  `danger_level` INT NOT NULL DEFAULT 0 COMMENT '危险等级: 0-普通, 1-低危, 2-高危, 3-致命',
+  `storage_condition` VARCHAR(100) COMMENT '存储条件',
+  `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_category_id` (`category_id`),
+  KEY `idx_danger_level` (`danger_level`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='耗材库存主表';
 
+INSERT INTO `material` (`category_id`, `name`, `specification`, `unit`, `stock`, `danger_level`, `storage_condition`) VALUES
+(1, '丁腈无尘手套', '9寸-麻面-M码', '箱', 120, 0, '常温避光'),
+(2, '均苯四甲酸二酐 (PMDA)', '纯度≥99.5%', 'kg', 50, 1, '密封防潮'),
+(3, '氢氟酸 (HF)', '49%-500ml/瓶', '瓶', 30, 3, '专用防腐柜，双人双锁'),
+(3, '硝酸 (HNO₃)', '65%-500ml/瓶', '瓶', 20, 3, '专用防腐柜，远离有机物'),
+(2, '无水乙醇 (C₂H₅OH)', 'AR-500ml/瓶', '瓶', 50, 1, '密封远离火源');
 
-CREATE TABLE `sys_log` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) DEFAULT NULL COMMENT '操作人',
-  `module` varchar(50) DEFAULT NULL COMMENT '操作模块',
-  `action` varchar(100) DEFAULT NULL COMMENT '动作说明',
-  `params` text COMMENT '请求参数',
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+-- 领用记录表
+CREATE TABLE IF NOT EXISTS `record` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `material_id` BIGINT NOT NULL COMMENT '领用的耗材ID',
+  `applicant` VARCHAR(50) NOT NULL COMMENT '申请人姓名/工号',
+  `quantity` INT NOT NULL COMMENT '申请领用数量',
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '状态: 0-已提交待审批, 1-已通过(发料), 2-已驳回, 3-已归还',
+  `remark` VARCHAR(255) COMMENT '用途说明/备注',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_material_id` (`material_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='领用记录表';
+
+-- ==================== 审计与流水表 ====================
+
+-- 操作审计日志表
+CREATE TABLE IF NOT EXISTS `sys_log` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(50) DEFAULT NULL COMMENT '操作人',
+  `module` VARCHAR(50) DEFAULT NULL COMMENT '操作模块',
+  `action` VARCHAR(100) DEFAULT NULL COMMENT '动作说明',
+  `params` TEXT COMMENT '请求参数',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统操作审计日志表';
 
--- 强氧化剂（高危试剂）
-INSERT INTO `material` (`category_id`, `name`, `specification`, `unit`, `stock`, `danger_level`, `storage_condition`) VALUES
-(3, '硝酸 (HNO₃)', '65%-500ml/瓶', '瓶', 20, 3, '专用防腐柜，远离有机物');
-
--- 易燃有机物（中危试剂）
-INSERT INTO `material` (`category_id`, `name`, `specification`, `unit`, `stock`, `danger_level`, `storage_condition`) VALUES
-(2, '无水乙醇 (C₂H₅OH)', 'AR-500ml/瓶', '瓶', 50, 1, '密封远离火源');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- 库存变动流水表（V2.0 接入）
+CREATE TABLE IF NOT EXISTS `stock_flow` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '流水ID',
+  `material_id` BIGINT NOT NULL COMMENT '耗材ID',
+  `change_type` TINYINT NOT NULL COMMENT '变动类型: 1-入库, 2-领用出库, 3-报损出库, 4-归还',
+  `change_quantity` INT NOT NULL COMMENT '变动数量',
+  `before_stock` INT NOT NULL COMMENT '变动前库存',
+  `after_stock` INT NOT NULL COMMENT '变动后库存',
+  `operator_id` BIGINT COMMENT '操作人ID',
+  `remark` VARCHAR(255) COMMENT '备注',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_material_id` (`material_id`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存变动流水表（V2.0接入）';
 
 
 
