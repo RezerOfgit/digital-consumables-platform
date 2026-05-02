@@ -4,12 +4,14 @@ import com.dcp.dto.ApproveDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
@@ -42,6 +44,27 @@ public class AiRiskService {
     @Resource
     @Lazy
     private RecordService recordService;
+
+    @Resource
+    private ResourceLoader resourceLoader;
+
+
+    /**
+     * 加载 AI 提示词模板
+     */
+    private String loadPromptTemplate() {
+        try {
+            // 【核心修复】：直接写出完整的类路径 org.springframework.core.io.Resource
+            // 这样编译器就明确知道这里用的是文件资源，而不是注入注解了！
+            org.springframework.core.io.Resource resource = resourceLoader.getResource("classpath:templates/ai_risk_prompt.txt");
+
+            return org.springframework.util.StreamUtils.copyToString(resource.getInputStream(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            log.error("读取 Prompt 模板失败", e);
+            // 兜底的默认提示词
+            return "你是一个安全专家。请评估实验员 '%s' 申请用途：'%s'，清单：\n%s\n如果有严重危险请包含【高危拦截】。";
+        }
+    }
 
     // 修改方法签名，把 recordId 传进来
     @Async
