@@ -39,17 +39,12 @@ public class CategoryService {
      * @return
      */
     public List<Category> getAllCategories() {
-
-        long start = System.currentTimeMillis();
-
         try {
             // 1. 尝试从 Redis 缓存中获取
             String cacheData = stringRedisTemplate.opsForValue().get(CATEGORY_LIST_CACHE_KEY);
 
             if (StringUtils.hasText(cacheData)) {
-//                log.info("命中分类列表缓存");
-                long end = System.currentTimeMillis();
-                log.info("命中分类列表缓存, 耗时: {}ms", end - start);
+                log.info("命中分类列表缓存");
                 return objectMapper.readValue(cacheData, new TypeReference<List<Category>>() {});
             }
         } catch (Exception e) {
@@ -70,9 +65,7 @@ public class CategoryService {
         } catch (Exception e) {
             log.error("回写分类缓存失败", e);
         }
-
-        long end = System.currentTimeMillis();
-        log.info("分类列表查询耗时: {}ms", end - start);
+        
         return categoryList;
     }
 
