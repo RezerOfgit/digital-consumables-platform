@@ -18,7 +18,7 @@ import java.util.Map;
 public class JwtUtils {
 
     private static final String SECRET_KEY = "DCP_Secret_Key_2026"; // 签名密钥
-    private static final long EXPIRE_TIME = 24 * 60 * 60 * 1000 * 7; // 令牌有效期 7 天
+    private static final long EXPIRE_TIME = 2 * 60 * 60 * 1000; // 令牌有效期 2 小时
 
     /**
      * 根据用户名和角色签发 Token
