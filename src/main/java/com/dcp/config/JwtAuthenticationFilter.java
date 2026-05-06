@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.Collections;
 
 /**
- * JWT 认证过滤器：解析请求头中的 Token，将用户信息写入 SecurityContext 和 ThreadLocal
+ * JWT 认证过滤器：解析请求头中的 Token，将用户信息写入 SecurityContext 和 ThreadLocal。
  * @author Re-zero
  * @version 1.0
  */

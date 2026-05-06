@@ -16,7 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import javax.annotation.Resource;
 
 /**
- * Spring Security 配置：JWT 认证 + RBAC 鉴权
+ * Spring Security 配置：JWT 认证 + RBAC 鉴权。
  * @author Re-zero
  * @version 1.0
  */
@@ -33,6 +33,10 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * 配置 Security 过滤链。
+     * 规则优先级：从上到下依次匹配，首个命中的规则生效。
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -52,10 +56,7 @@ public class SecurityConfig {
     }
 
     /**
-     * 暴露 AuthenticationManager，Spring Security 5.7+ 标准做法
-     * @param authenticationConfiguration
-     * @return
-     * @throws Exception
+     * 暴露 AuthenticationManager，Spring Security 5.7+ 标准做法，供登录接口主动触发账号密码校验。
      */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {

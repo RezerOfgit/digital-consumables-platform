@@ -13,24 +13,23 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
 
+  # Redis 配置
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password: ${REDIS_PASSWORD:}
+    database: 0
+    lettuce:
+      pool:
+        max-active: 8
+        max-wait: -1ms
+        max-idle: 8
+        min-idle: 0
+
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印 SQL，方便调试
     map-underscore-to-camel-case: true # 下划线自动映射驼峰 (category_id -> categoryId)
-  mapper-locations: classpath:mapper/*.xml
-
-# Redis 配置
-redis:
-  host: 127.0.0.1
-  port: 6379
-  password: ${REDIS_PASSWORD:}
-  database: 0
-  lettuce:
-    pool:
-      max-active: 8
-      max-wait: -1ms
-      max-idle: 8
-      min-idle: 0
 
 # DeepSeek AI 配置
 deepseek:

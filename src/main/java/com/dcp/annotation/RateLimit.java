@@ -14,7 +14,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RateLimit {
 
-    int time() default 60; // 限流时间窗口，单位：秒
+    /** 限流时间窗口（秒） */
+    int time() default 60;
 
-    int count() default 5; // 时间窗口内允许的最大访问次数
+    /** 时间窗口内允许的最大访问次数 */
+    int count() default 5;
 }

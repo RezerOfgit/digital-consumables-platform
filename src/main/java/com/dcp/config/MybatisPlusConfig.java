@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * MyBatis-Plus 配置：注册乐观锁插件
+ * MyBatis-Plus 配置：注册乐观锁插件。
  * @author Re-zero
  * @version 1.0
  */

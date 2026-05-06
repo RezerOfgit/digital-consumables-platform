@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Knife4j 配置：API 文档及全局 Token 支持
+ * Knife4j 配置：API 文档及全局 Token 支持。
  * @author Re-zero
  * @version 1.0
  */
@@ -41,14 +41,14 @@ public class Knife4jConfig {
                 .securityContexts(securityContexts());
     }
 
-    // 请求头中需要携带 Authorization
+    /** 请求头中携带 Authorization */
     private List<SecurityScheme> securitySchemes() {
         List<SecurityScheme> apiKeyList = new ArrayList<>();
         apiKeyList.add(new ApiKey("Authorization", "Authorization", "header"));
         return apiKeyList;
     }
 
-    // 需要携带 Token 的路径（排除登录接口）
+    /** 需要携带 Token 的路径，排除登录接口 */
     private List<SecurityContext> securityContexts() {
         List<SecurityContext> securityContexts = new ArrayList<>();
         securityContexts.add(

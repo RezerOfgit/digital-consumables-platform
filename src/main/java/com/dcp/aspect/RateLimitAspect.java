@@ -42,10 +42,6 @@ public class RateLimitAspect {
 
     /**
      * 环绕通知：拦截 @RateLimit 注解的方法，按用户粒度限流
-     * @param joinPoint
-     * @param rateLimit
-     * @return
-     * @throws Throwable
      */
     @Around("@annotation(rateLimit)")
     public Object around(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
@@ -72,7 +68,6 @@ public class RateLimitAspect {
         // 4. 超出限流阈值时抛出异常
         if (result != null && result == 0L) {
             log.warn("[接口限流] 用户 {} 访问接口 {} 过于频繁", username, methodName);
-            // 抛出业务异常，正好会被你刚才写好的 GlobalExceptionHandler 完美拦截！
             throw new BusinessException(429, "操作过于频繁，请稍后再试！");
         }
 

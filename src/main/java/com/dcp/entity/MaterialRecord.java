@@ -10,7 +10,7 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * 耗材领用记录实体
+ * 耗材领用记录实体，对应 record 表。
  * @author Re-zero
  * @version 1.0
  */
@@ -23,7 +23,7 @@ public class MaterialRecord {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    @ApiModelProperty(value = "领用的耗材ID", required = true, example = "1")
+    @ApiModelProperty(value = "耗材ID", required = true, example = "1")
     private Long materialId;
 
     @ApiModelProperty(value = "申请人工号/姓名", required = true, example = "张三")
@@ -35,6 +35,7 @@ public class MaterialRecord {
     @ApiModelProperty(value = "领用备注", example = "测试用，请勿线上审批")
     private String remark;
 
+    /** 状态：0-待审批 1-已通过 2-已驳回 3-已归还 */
     @ApiModelProperty(value = "状态: 0-已提交待审批, 1-已通过(发料), 2-已驳回, 3-已归还")
     private Integer status;
 

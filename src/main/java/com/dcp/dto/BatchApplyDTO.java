@@ -9,7 +9,7 @@ import javax.validation.Valid;
 import java.util.List;
 
 /**
- * 批量耗材领用申请 DTO
+ * 批量耗材领用申请 DTO。
  * @author Re-zero
  * @version 1.0
  */
@@ -18,7 +18,7 @@ import java.util.List;
 @ApiModel(description = "批量耗材领用申请")
 public class BatchApplyDTO extends BaseApplyDTO {
 
-    @ApiModelProperty(value = "申请耗材明细列表", required = true)
+    @ApiModelProperty(value = "耗材明细列表", required = true)
     @Valid
     private List<ApplyItemDTO> items;
 }

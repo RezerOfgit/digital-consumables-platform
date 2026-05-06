@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 耗材分类服务
+ * 耗材分类服务，提供 Redis 旁路缓存（Cache-Aside）。
  * @author Re-zero
  * @version 1.0
  */
@@ -35,8 +35,7 @@ public class CategoryService {
     private static final String CATEGORY_LIST_CACHE_KEY = "dcp:category:list";
 
     /**
-     * 获取所有耗材分类（Redis 缓存 + 降级查库）
-     * @return
+     * 获取所有耗材分类，优先读 Redis 缓存，未命中时查库并回写。
      */
     public List<Category> getAllCategories() {
         try {
@@ -48,7 +47,7 @@ public class CategoryService {
                 return objectMapper.readValue(cacheData, new TypeReference<List<Category>>() {});
             }
         } catch (Exception e) {
-            // Redis 不可用时降级，不影响主业务
+            // Redis 不可用时降级查库，不影响主业务
             log.error("读取分类缓存异常，触发降级查库", e);
         }
 
@@ -70,8 +69,7 @@ public class CategoryService {
     }
 
     /**
-     * 新增分类，同时清除缓存，保证下次查询获取最新数据
-     * @param category
+     * 新增分类，同时清除缓存，保证下次查询获取最新数据。
      */
     public void addCategory(Category category) {
         categoryMapper.insert(category);

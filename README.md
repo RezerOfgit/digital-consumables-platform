@@ -2,7 +2,7 @@
 
 ## 项目背景
 
-我之前在电池材料研发岗和洁净间实验室都都工作过。那段经历让我接触到一线的物料流转流程：高危试剂的领用记录分散在纸质单据和 Excel 台账里，月底盘点经常对不上账，事后想追溯某批耗材的去向，翻记录能翻半天。
+我之前在电池材料研发岗和洁净间实验室都工作过。那段经历让我接触到一线的物料流转流程：高危试剂的领用记录分散在纸质单据和 Excel 台账里，月底盘点经常对不上账，事后想追溯某批耗材的去向，翻记录能翻半天。
 
 我是从化工转行做开发的，所以这个项目不是我凭空想象的 Demo，而是用代码把那些真实的业务痛点转化成了一套能落地的数字化方案。
 
@@ -36,7 +36,7 @@
 
 ### 3. 审计日志为什么不用硬编码
 
-一开始想过在 Service 里直接写日志插入代码，但发现每个方法都要重复差不多的事情。后来改成了自定义注解 + AOP 切面的方式：业务方法上贴一个 `@AuditLog` 注解，切面自动从 `ThreadLocal` 里取当前用户名（JWT 过滤器提前塞好的），把操作人、IP、请求参数写进 `sys_log` 表。业务代码完全不用动。
+一开始想过在 Service 里直接写日志插入代码，但发现每个方法都要重复差不多的事情。后来改成了自定义注解 + AOP 切面的方式：业务方法上贴一个 `@AuditLog` 注解，切面自动从 `ThreadLocal` 里取当前用户名（JWT 过滤器提前塞好的），把操作人、操作模块、请求参数写进 `sys_log` 表。业务代码完全不用动。
 
 ### 4. 为什么用 Redis + Lua 做限流
 
@@ -46,10 +46,18 @@ Java 代码先去 Redis 查次数再加 1，不是原子操作，高并发下有
 
 1. 克隆项目
 2. 执行 `src/main/resources/db/schema.sql` 建库建表
-3. 修改 `application.yml` 中的数据库连接信息，确保用户名和密码与你本地 MySQL 一致
-4. 申请 DeepSeek API Key，设置环境变量 `DEEPSEEK_API_KEY=你的Key`
-5. 确保本地 Redis 已启动（默认端口 6379，无需密码）
-6. 启动项目，访问 `http://localhost:8080/doc.html` 即进入 Knife4j 接口文档
+3. 在 IDE 运行配置中设置以下环境变量：
+    
+    | 变量名 | 说明 | 示例值 |
+    |--------|------|--------|
+    | `DB_PASSWORD` | MySQL 连接密码 | `your_password` |
+    | `REDIS_PASSWORD` | Redis 密码（无密码留空） | |
+    | `DEEPSEEK_API_KEY` | DeepSeek API Key | `sk-xxx` |
+    | `DCP_JWT_SECRET` | JWT 签名密钥（≥32 字符） | `DcpSecretKey2026!` |
+
+4. 确保本地 Redis 已启动（默认端口 6379）
+5. 启动项目，访问 `http://localhost:8080/doc.html` 进入 Knife4j 接口文档
+
 
 **测试账号：**
 
@@ -77,7 +85,6 @@ digital-consumables-platform/
 ├─ src/main/resources/
 │  ├─ db/schema.sql        # 数据库初始化脚本
 │  ├─ lua/rate_limit.lua   # Redis 限流 Lua 脚本
-│  ├─ mapper/              # MyBatis XML 映射文件
 │  └─ templates/ai_risk_prompt.txt  # AI 风险评估提示词模板
 ├─ src/test/               # 单元测试
 └─ pom.xml
@@ -86,5 +93,5 @@ digital-consumables-platform/
 ## 路线图 (Roadmap)
 
 - **库存流水** — 表结构已建好，后续接入领用/归还/报废的全链路记录
-- **分布式事务** — 批量领用目前依赖 Redis 补偿，后续考虑引入 TCC 或 Saga 模式
+- **分布式事务** — 批量领用目前采用 Redis 补偿 + MySQL 事务回滚，后续考虑引入 TCC 或 Saga 模式
 - **前端页面** — 计划开发配套前端，提供完整的可视化操作体验

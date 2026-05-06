@@ -1,7 +1,8 @@
 package com.dcp.utils;
 
 /**
- * 基于 ThreadLocal 的用户上下文工具类：在同一线程内传递当前登录用户名
+ * ThreadLocal 用户上下文，在同一线程内传递当前登录用户名。
+ * 由 JWT 过滤器写入，由 AOP 审计日志切面读取。
  * @author Re-zero
  * @version 1.0
  */
@@ -17,9 +18,7 @@ public class UserContext {
         return USER_THREAD_LOCAL.get();
     }
 
-    /**
-     * 清理 ThreadLocal，防止 Tomcat 线程池复用导致内存泄漏
-     */
+    /** 清理 ThreadLocal，防止 Tomcat 线程池复用导致内存泄漏 */
     public static void clear() {
         USER_THREAD_LOCAL.remove();
     }

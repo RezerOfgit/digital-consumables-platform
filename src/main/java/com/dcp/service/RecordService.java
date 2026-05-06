@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 领用记录服务：单品/批量领用申请、审批，Redis 预扣 + MySQL 乐观锁落盘
+ * 领用记录服务，实现 Redis 原子预扣 + MySQL 乐观锁落盘的防超卖方案。
  * @author Re-zero
  * @version 1.0
  */
@@ -43,9 +43,8 @@ public class RecordService {
     private static final String STOCK_KEY_PREFIX = "dcp:material:stock:";
 
     /**
-     * 单品领用申请 (核心业务)
-     * Redis 原子预扣 -> MySQL 乐观锁落盘 -> 生成待审批记录 -> 异步 AI 风控
-     * @param applyDTO
+     * 单品领用申请。
+     * 流程：Redis 原子预扣 -> MySQL 乐观锁落盘 -> 生成待审批记录 -> 异步 AI 风控
      */
     @Transactional(rollbackFor = Exception.class)
     public void applyMaterial(ApplyDTO applyDTO) {
@@ -102,13 +101,11 @@ public class RecordService {
                 applyDTO.getQuantity(),
                 applyDTO.getRemark()
         );
-
     }
 
     /**
-     * 批量提交领用申请 (核心业务)
-     * 遍历明细逐条扣减，任意一条失败则回滚全部已扣 Redis 库存，@Transactional 回滚 MySQL
-     * @param batchDTO
+     * 批量提交领用申请 (核心业务)。
+     * 遍历明细逐条扣减，任意一条失败则回滚全部已扣 Redis 库存，@Transactional 回滚 MySQL。
      */
     @Transactional(rollbackFor = Exception.class)
     public void applyBatchMaterial(BatchApplyDTO batchDTO) {
@@ -176,9 +173,8 @@ public class RecordService {
     }
 
     /**
-     * 审批领用记录 (同意或驳回)
-     * 驳回 (status=2) 时归还 Redis 和 MySQL 库存
-     * @param approveDTO
+     * 审批领用记录 (同意或驳回)。
+     * 驳回 (status=2) 时归还 Redis 和 MySQL 库存。
      */
     @Transactional(rollbackFor = Exception.class)
     public void approveRecord(ApproveDTO approveDTO) {

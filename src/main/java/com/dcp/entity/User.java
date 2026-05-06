@@ -10,7 +10,7 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * 系统用户实体
+ * 系统用户实体，对应 user 表。
  * @author Re-zero
  * @version 1.0
  */
@@ -26,7 +26,7 @@ public class User {
     @ApiModelProperty(value = "登录账号", required = true, example = "admin")
     private String username;
 
-    @ApiModelProperty(value = "登录密码（加密存储）", required = true)
+    @ApiModelProperty(value = "登录密码", required = true)
     private String password;
 
     @ApiModelProperty(value = "真实姓名", example = "系统管理员")

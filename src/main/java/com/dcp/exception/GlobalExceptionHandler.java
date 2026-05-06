@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.stream.Collectors;
 
 /**
- * 全局异常处理器：拦截异常并包装为统一 JSON 响应
+ * 全局异常处理器，将各类异常统一转换为 {@link R} 格式响应。
  * @author Re-zero
  * @version 1.0
  */
@@ -32,6 +32,7 @@ public class GlobalExceptionHandler {
         return R.fail(e.getCode(), e.getMessage());
     }
 
+    /** AI 配伍禁忌预警，错误码 4030 */
     @ExceptionHandler(AiBlockedException.class)
     @ResponseStatus(HttpStatus.OK)
     public R<Void> handleAiBlocked(AiBlockedException e) {
@@ -59,7 +60,7 @@ public class GlobalExceptionHandler {
         return R.fail(400, msg);
     }
 
-    // HTTP 请求方法错误（GET 访问 POST 接口等）
+    /** HTTP 方法不匹配，如 GET 访问 POST 接口 */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public R<Void> handleMethodNotAllowed(HttpRequestMethodNotSupportedException e) {

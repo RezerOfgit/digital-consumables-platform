@@ -9,7 +9,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * 耗材分类控制器
+ * 耗材分类控制器。
  * @author Re-zero
  * @version 1.0
  */
@@ -20,21 +20,14 @@ public class CategoryController {
     @Resource
     private CategoryService categoryService;
 
-    /**
-     * 查询所有分类
-     * @return
-     */
+    /** 查询所有分类 */
     @GetMapping("/list")
     public R<List<Category>> list() {
         List<Category> list = categoryService.getAllCategories();
         return R.ok(list);
     }
 
-    /**
-     * 新增分类
-     * @param category
-     * @return
-     */
+    /** 新增分类 */
     @PostMapping("/add")
     public R<Void> add(@RequestBody Category category) {
         categoryService.addCategory(category);

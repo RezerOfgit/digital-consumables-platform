@@ -19,7 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * AI 风控服务：调用 DeepSeek 接口评估领用风险，高危自动熔断驳回
+ * AI 风控服务，调用 DeepSeek 接口评估领用风险，高危时自动熔断驳回并退还库存。
+ * 提示词模板外置在 classpath:templates/ai_risk_prompt.txt，支持无代码调整规则。
  * @author Re-zero
  * @version 1.0
  */
@@ -49,8 +50,7 @@ public class AiRiskService {
     // ==================== 私有工具方法 ====================
 
     /**
-     * 从 classpath 加载 AI 提示词模板，加载失败时返回兜底模板
-     * @return
+     * 从 classpath 加载 AI 提示词模板，加载失败时返回兜底模板。
      */
     private String loadPromptTemplate() {
         try {
@@ -59,14 +59,13 @@ public class AiRiskService {
         } catch (Exception e) {
             log.error("读取 Prompt 模板失败", e);
             // 兜底提示词，确保 AI 风控不会因模板丢失而完全失效
-            return "你是一个安全专家。请评估实验员 '%s' 申请用途：'%s'，清单：\n%s\n如果有严重危险请包含【高危拦截】。";
+            return "你是实验室安全专家。实验员 '%s' 申请用途：'%s'，清单：\n%s\n" +
+                    "请评估风险并严格按以下格式输出：风险等级：[高危/中危/低危/安全]；危害描述：[xxx]；安全建议：[xxx]。";
         }
     }
 
     /**
-     * 调用 DeepSeek 接口，返回 AI 回复文本
-     * @param prompt
-     * @return
+     * 调用 DeepSeek 接口，返回 AI 回复文本。
      */
     private String callDeepSeek(String prompt) {
 
@@ -101,9 +100,7 @@ public class AiRiskService {
     }
 
     /**
-     * 熔断：批量驳回指定领用记录并退还库存
-     * @param recordIds
-     * @param aiAdvice
+     * 熔断：批量驳回指定领用记录并退还库存。
      */
     private void executeCircuitBreaker(List<Long> recordIds, String aiAdvice) {
         log.warn("[AI 熔断] 正在自动驳回 {} 条订单并退还库存...", recordIds.size());
@@ -121,12 +118,7 @@ public class AiRiskService {
     // ==================== 风控方法 ====================
 
     /**
-     * 单种耗材异步风控
-     * @param recordId
-     * @param applicant
-     * @param materialName
-     * @param quantity
-     * @param remark
+     * 单种耗材异步风控，调用 DeepSeek 评估后决定是否熔断。
      */
     @Async
     public void analyzeRequisitionRisk(Long recordId, String applicant, String materialName, Integer quantity, String remark) {
@@ -140,13 +132,11 @@ public class AiRiskService {
         log.info("[异步风控线程启动] 开始对 {} 领用 {} 进行 AI 风险评估...", applicant, materialName);
 
         try {
-            // 1. 加载模板并构造提示词
-            String template = loadPromptTemplate(); // 复用同一个模板
-            // 构造单品清单，复用批量模板
+            String template = loadPromptTemplate();
             String singleItemList = String.format("- %s (数量: %d)", materialName, quantity);
             String prompt = String.format(template, applicant, remark, singleItemList);
 
-            // 2. 调用 AI 并根据结果决定是否熔断
+            // 调用 AI 并根据结果决定是否熔断
             String aiAdvice = callDeepSeek(prompt);
             log.info("[AI 评估完成] 专家建议：\n{}", aiAdvice);
 
@@ -161,11 +151,7 @@ public class AiRiskService {
     }
 
     /**
-     * 批量耗材异步综合风控
-     * @param recordIds
-     * @param applicant
-     * @param remark
-     * @param aiItemListStr
+     * 批量耗材异步综合风控，多项耗材合并为一次 AI 调用。
      */
     @Async
     public void analyzeBatchRisk(List<Long> recordIds, String applicant, String remark, String aiItemListStr) {

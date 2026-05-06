@@ -8,7 +8,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
- * Redis 配置：自定义 Key/Value 序列化方式
+ * Redis 配置：自定义 Key/Value 序列化方式。
  * @author Re-zero
  * @version 1.0
  */

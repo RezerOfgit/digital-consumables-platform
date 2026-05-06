@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 认证控制器：登录接口及 Token 签发
+ * 认证控制器：登录接口及 Token 签发。
  * @author Re-zero
  * @version 1.0
  */
@@ -39,9 +39,8 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
 
     /**
-     * 用户登录，验证通过后签发 JWT Token
-     * @param loginDTO
-     * @return
+     * 用户登录，由 AuthenticationManager 委托 UserDetailsServiceImpl 完成密码比对，
+     * 认证通过后签发 JWT Token 返回。
      */
     @PostMapping("/login")
     public R<Map<String, String>> login(@RequestBody LoginDTO loginDTO) {

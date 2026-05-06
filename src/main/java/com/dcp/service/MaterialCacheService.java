@@ -11,7 +11,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * 耗材库存缓存服务：启动时将 MySQL 库存预热到 Redis
+ * 耗材库存缓存服务：启动时将 MySQL 库存预热到 Redis。
  * @author Re-zero
  * @version 1.0
  */
@@ -28,9 +28,7 @@ public class MaterialCacheService {
     // Redis 中库存 Key 的前缀规范
     private static final String STOCK_KEY_PREFIX = "dcp:material:stock:";
 
-    /**
-     * 缓存预热：启动时自动执行，将 MySQL 库存同步到 Redis
-     */
+    /** 启动时预热：将全量库存从 MySQL 加载到 Redis */
     @PostConstruct
     public void initStockToRedis() {
         log.info("--- 开始进行耗材库存缓存预热 ---");

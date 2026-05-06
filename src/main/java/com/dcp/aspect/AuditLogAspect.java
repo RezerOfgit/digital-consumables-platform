@@ -14,7 +14,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 
 /**
- * 审计日志切面：拦截 @AuditLog 注解的方法，记录操作人、模块、入参
+ * 审计日志切面，拦截 {@link AuditLog} 注解，记录操作人、模块、入参。
+ * 操作人信息由 JWT 过滤器注入 ThreadLocal，业务代码无需感知。
  * @author Re-zero
  * @version 1.0
  */
@@ -31,10 +32,6 @@ public class AuditLogAspect {
 
     /**
      * 环绕通知：拦截所有贴了 @AuditLog 注解的方法
-     * @param joinPoint
-     * @param auditLog
-     * @return
-     * @throws Throwable
      */
     @Around("@annotation(auditLog)") // auditLog 参数名需与方法参数一致
     public Object recordAuditLog(ProceedingJoinPoint joinPoint, AuditLog auditLog) throws Throwable {

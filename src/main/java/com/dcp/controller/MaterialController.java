@@ -13,7 +13,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * 耗材账目管理控制器
+ * 耗材账目管理控制器。
  * @author Re-zero
  * @version 1.0
  */
@@ -31,11 +31,7 @@ public class MaterialController {
         return R.ok(materialService.listAll());
     }
 
-    /**
-     * 耗材入库，仅限管理员操作
-     * @param material
-     * @return
-     */
+    /** 耗材入库，仅限管理员操作 */
     @ApiOperation("耗材入库 (仅限 ADMIN)")
     @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN')")

@@ -9,7 +9,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * 耗材基础信息服务
+ * 耗材基础信息服务。
  * @author Re-zero
  * @version 1.0
  */
@@ -18,18 +18,12 @@ public class MaterialService {
     @Resource
     private MaterialMapper materialMapper;
 
-    /**
-     * 查询所有耗材
-     * @return
-     */
+    /** 查询所有耗材 */
     public List<Material> listAll() {
         return materialMapper.selectList(null);
     }
 
-    /**
-     * 新增耗材，初始库存不允许为负
-     * @param material
-     */
+    /** 新增耗材，初始库存不允许为负 */
     public void addMaterial(Material material) {
         if (material.getStock() < 0) {
             throw new BusinessException("初始库存不能为负数");

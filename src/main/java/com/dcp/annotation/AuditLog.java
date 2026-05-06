@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 审计日志注解
+ * 审计日志注解，标注在需要记录操作日志的方法上。
  * @author Re-zero
  * @version 1.0
  */
@@ -14,7 +14,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME) // 运行时通过反射读取
 public @interface AuditLog {
 
-    String module() default ""; // 操作模块，例如："耗材管理"
+    /** 操作模块，如 "耗材管理" */
+    String module() default "";
 
-    String action() default ""; // 具体动作，例如："高危试剂领用"
+    /** 具体动作，如 "高危试剂领用" */
+    String action() default "";
 }

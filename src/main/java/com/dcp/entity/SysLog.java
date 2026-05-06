@@ -8,7 +8,7 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * 系统操作日志实体
+ * 系统操作日志实体，对应 sys_log 表。
  * @author Re-zero
  * @version 1.0
  */

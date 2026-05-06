@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 /**
- * 用户认证服务：根据用户名查询数据库并转换为 Security 认证对象
+ * 用户认证服务，根据用户名查询数据库并转换为 {@link UserDetails}。
  * @author Re-zero
  * @version 1.0
  */

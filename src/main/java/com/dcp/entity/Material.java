@@ -12,7 +12,7 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * 耗材实体类
+ * 耗材实体，对应 material 表。
  * @author Re-zero
  * @version 1.0
  */
@@ -21,8 +21,9 @@ import java.util.Date;
 @TableName("material")
 public class Material {
 
-    @ApiModelProperty(value = "乐观锁版本号", hidden = true)
-    @Version // 更新时自动比对并累加 version
+    /** 乐观锁版本号，更新时自动比对并累加 */
+    @ApiModelProperty(value = "版本号", hidden = true)
+    @Version
     private Integer version;
 
     @ApiModelProperty(value = "主键ID", hidden = true)
@@ -44,6 +45,7 @@ public class Material {
     @ApiModelProperty(value = "当前库存量", example = "100")
     private Integer stock;
 
+    /** 危险等级：0-普通 1-低危 2-高危 3-致命 */
     @ApiModelProperty(value = "危险等级: 0-普通, 1-低危, 2-高危, 3-致命", example = "1")
     private Integer dangerLevel = 0;
 

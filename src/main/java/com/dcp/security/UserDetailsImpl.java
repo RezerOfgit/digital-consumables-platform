@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * Spring Security 用户详情实现：封装认证用户信息及角色
+ * Spring Security 用户详情实现：封装认证用户信息及角色。
  * @author Re-zero
  * @version 1.0
  */
@@ -25,9 +25,9 @@ public class UserDetailsImpl implements UserDetails {
     private final Collection<? extends GrantedAuthority> authorities;
 
     /**
-     * 将数据库 User 实体转换为 Security 认证对象
-     * @param user
-     * @return
+     * 将数据库 User 实体转换为 Security 认证对象。
+     * @param user 数据库用户实体
+     * @return Security 认证对象
      */
     public static UserDetailsImpl build(User user) {
         // 根据角色拼接 ROLE_ 前缀，Spring Security 鉴权规范要求

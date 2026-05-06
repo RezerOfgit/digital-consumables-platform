@@ -9,7 +9,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 /**
- * 单项耗材领用申请 DTO
+ * 单项耗材领用申请 DTO。
  * @author Re-zero
  * @version 1.0
  */
@@ -18,7 +18,7 @@ import javax.validation.constraints.NotNull;
 @ApiModel(description = "单项耗材领用申请")
 public class ApplyDTO extends BaseApplyDTO {
 
-    @ApiModelProperty(value = "要领用的耗材ID", required = true, example = "3")
+    @ApiModelProperty(value = "耗材ID", required = true, example = "3")
     @NotNull(message = "耗材ID不能为空")
     private Long materialId;
 

@@ -1,7 +1,7 @@
 package com.dcp.exception;
 
 /**
- * AI 配伍禁忌预警专属异常
+ * AI 配伍禁忌预警异常，触发时自动驳回申请并退还库存。
  * @author Re-zero
  * @version 1.0
  */

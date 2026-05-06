@@ -19,7 +19,7 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 
 /**
- * 领用记录管理控制器：单品/批量领用及审批
+ * 领用记录管理控制器：单品/批量领用及审批。
  * @author Re-zero
  * @version 1.0
  */
@@ -31,11 +31,7 @@ public class RecordController {
     @Resource
     private RecordService recordService;
 
-    /**
-     * 耗材单品领用申请
-     * @param applyDTO
-     * @return
-     */
+    /** 耗材单品领用申请 */
     @ApiOperation("耗材单品领用申请")
     @PostMapping("/apply")
     @AuditLog(module = "领用中心", action = "提交耗材领用申请")
@@ -46,11 +42,7 @@ public class RecordController {
         return R.ok("申请已提交，已进入风控与审批流程", null);
     }
 
-    /**
-     * 耗材批量领用申请
-     * @param batchDTO
-     * @return
-     */
+    /** 耗材批量领用申请 */
     @ApiOperation("耗材批量领用申请")
     @PostMapping("/apply-batch")
     @AuditLog(module = "领用中心", action = "提交批量耗材领用申请")
@@ -62,9 +54,8 @@ public class RecordController {
     }
 
     /**
-     * 审批领用申请，仅限管理员
-     * @param approveDTO
-     * @return
+     * 审批领用申请，仅限管理员。
+     * 人工审批通过或驳回后，需同步更新库存状态。
      */
     @ApiOperation("审批领用申请 (人工/仅限 ADMIN)")
     @PostMapping("/approve")

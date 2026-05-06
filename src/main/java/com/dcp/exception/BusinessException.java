@@ -3,7 +3,7 @@ package com.dcp.exception;
 import lombok.Getter;
 
 /**
- * 自定义通用业务异常
+ * 自定义通用业务异常。
  * @author Re-zero
  * @version 1.0
  */
