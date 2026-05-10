@@ -3,6 +3,9 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.env
+# Docker 数据卷（数据库数据，不应提交）
+mysql-data/
 
 ### STS ###
 .apt_generated

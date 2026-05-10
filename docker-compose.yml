@@ -1,0 +1,43 @@
+services:
+  # ==================== MySQL ====================
+  mysql:
+    image: mysql:8.0
+    container_name: dcp-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: dcp
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+      # 启动时自动执行建表脚本
+      - ./src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  # ==================== Redis ====================
+  redis:
+    image: redis:7-alpine
+    container_name: dcp-redis
+    ports:
+      - "6379:6379"
+    # 开发环境无需密码；生产环境取消注释并设置 REDIS_PASSWORD
+    # command: redis-server --requirepass ${REDIS_PASSWORD}
+
+  # ==================== Java 后端 ====================
+  dcp-app:
+    build: .
+    container_name: dcp-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      # 容器间通过服务名通信，替换 localhost
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/dcp?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+#      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD:}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      DCP_JWT_SECRET: ${DCP_JWT_SECRET}
