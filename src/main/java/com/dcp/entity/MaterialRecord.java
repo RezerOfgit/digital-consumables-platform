@@ -1,8 +1,6 @@
 package com.dcp.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -32,16 +30,22 @@ public class MaterialRecord {
     @ApiModelProperty(value = "领用数量", required = true, example = "5")
     private Integer quantity;
 
-    @ApiModelProperty(value = "领用备注", example = "测试用，请勿线上审批")
+    @ApiModelProperty(value = "领用备注", example = "用于有机合成实验")
     private String remark;
 
     /** 状态：0-待审批 1-已通过 2-已驳回 3-已归还 */
     @ApiModelProperty(value = "状态: 0-已提交待审批, 1-已通过(发料), 2-已驳回, 3-已归还")
     private Integer status;
 
-    @ApiModelProperty(value = "申请时间", hidden = true)
+    @ApiModelProperty(value = "创建时间", hidden = true)
+    @TableField(fill = FieldFill.INSERT)
     private Date createTime;
 
     @ApiModelProperty(value = "更新时间", hidden = true)
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
+
+    @ApiModelProperty(value = "逻辑删除标志", hidden = true)
+    @TableLogic
+    private Integer isDeleted;
 }

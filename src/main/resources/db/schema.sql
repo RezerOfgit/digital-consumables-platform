@@ -15,8 +15,9 @@ CREATE TABLE IF NOT EXISTS `user` (
   `username` VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
   `password` VARCHAR(100) NOT NULL COMMENT '加密后的密码',
   `real_name` VARCHAR(50) COMMENT '真实姓名',
-  `role` VARCHAR(20) NOT NULL DEFAULT 'USER' COMMENT '角色: USER-实验员, ADMIN-库管员',
+  `role` VARCHAR(20) NOT NULL DEFAULT 'USER' COMMENT '角色: USER-实验员 ADMIN-库管员',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `is_deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0-未删除 1-已删除',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户信息表';
 
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS `category` (
   `sort` INT DEFAULT 0 COMMENT '排序权重',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0-未删除 1-已删除',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='耗材分类表';
 
@@ -50,11 +52,12 @@ CREATE TABLE IF NOT EXISTS `material` (
   `specification` VARCHAR(50) COMMENT '规格型号',
   `unit` VARCHAR(20) NOT NULL COMMENT '计量单位',
   `stock` INT NOT NULL DEFAULT 0 COMMENT '当前库存量',
-  `danger_level` INT NOT NULL DEFAULT 0 COMMENT '危险等级: 0-普通, 1-低危, 2-高危, 3-致命',
+  `danger_level` INT NOT NULL DEFAULT 0 COMMENT '危险等级: 0-普通 1-低危 2-高危 3-致命',
   `storage_condition` VARCHAR(100) COMMENT '存储条件',
   `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0-未删除 1-已删除',
   PRIMARY KEY (`id`),
   KEY `idx_category_id` (`category_id`),
   KEY `idx_danger_level` (`danger_level`)
@@ -73,10 +76,11 @@ CREATE TABLE IF NOT EXISTS `record` (
   `material_id` BIGINT NOT NULL COMMENT '领用的耗材ID',
   `applicant` VARCHAR(50) NOT NULL COMMENT '申请人姓名/工号',
   `quantity` INT NOT NULL COMMENT '申请领用数量',
-  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '状态: 0-已提交待审批, 1-已通过(发料), 2-已驳回, 3-已归还',
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '状态: 0-待审批 1-已通过 2-已驳回 3-已归还',
   `remark` VARCHAR(255) COMMENT '用途说明/备注',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0-未删除 1-已删除',
   PRIMARY KEY (`id`),
   KEY `idx_material_id` (`material_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='领用记录表';
@@ -88,9 +92,10 @@ CREATE TABLE IF NOT EXISTS `sys_log` (
   `id` BIGINT NOT NULL AUTO_INCREMENT,
   `username` VARCHAR(50) DEFAULT NULL COMMENT '操作人',
   `module` VARCHAR(50) DEFAULT NULL COMMENT '操作模块',
-  `action` VARCHAR(100) DEFAULT NULL COMMENT '动作说明',
-  `params` TEXT COMMENT '请求参数',
+  `action` VARCHAR(100) DEFAULT NULL COMMENT '操作动作',
+  `params` TEXT COMMENT '方法入参（JSON 格式）',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+  `is_deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0-未删除 1-已删除',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统操作审计日志表';
 
