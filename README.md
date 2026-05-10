@@ -44,20 +44,41 @@ Java 代码先去 Redis 查次数再加 1，不是原子操作，高并发下有
 
 ## 快速开始
 
+### 方式一：Docker Compose 一键启动（推荐）
+
+1. 克隆项目后，先在本地构建 jar 包
+   ```bash
+   mvn clean package -DskipTests
+   ```
+2. 复制并编辑环境变量文件
+   ```bash
+   cp .env.example .env
+   ```
+   填入以下值：
+    - `DB_PASSWORD` — MySQL 密码
+    - `DEEPSEEK_API_KEY` — DeepSeek API Key
+    - `DCP_JWT_SECRET` — JWT 签名密钥（≥32 字符）
+3. 一键启动
+   ```bash
+   docker compose up -d
+   ```
+4. 访问接口文档：`http://localhost:8080/doc.html`
+
+### 方式二：本地手动启动
+
 1. 克隆项目
 2. 执行 `src/main/resources/db/schema.sql` 建库建表
 3. 在 IDE 运行配置中设置以下环境变量：
-    
-    | 变量名 | 说明 | 示例值 |
-    |--------|------|--------|
-    | `DB_PASSWORD` | MySQL 连接密码 | `your_password` |
-    | `REDIS_PASSWORD` | Redis 密码（无密码留空） | |
-    | `DEEPSEEK_API_KEY` | DeepSeek API Key | `sk-xxx` |
-    | `DCP_JWT_SECRET` | JWT 签名密钥（≥32 字符） | `DcpSecretKey2026!` |
+
+   | 变量名 | 说明 | 示例值 |
+   |--------|------|--------|
+   | `DB_PASSWORD` | MySQL 连接密码 | `your_password` |
+   | `REDIS_PASSWORD` | Redis 密码（无密码留空） | |
+   | `DEEPSEEK_API_KEY` | DeepSeek API Key | `sk-xxx` |
+   | `DCP_JWT_SECRET` | JWT 签名密钥（≥32 字符） | `DcpSecretKey2026!` |
 
 4. 确保本地 Redis 已启动（默认端口 6379）
 5. 启动项目，访问 `http://localhost:8080/doc.html` 进入 Knife4j 接口文档
-
 
 **测试账号：**
 
@@ -79,15 +100,19 @@ digital-consumables-platform/
 │  ├─ entity/              # 数据库实体
 │  ├─ exception/           # 全局异常处理 & 自定义业务异常
 │  ├─ mapper/              # MyBatis-Plus Mapper 接口
-│  ├─ security/            # JWT 工具、Spring Security 实现
+│  ├─ security/            # JWT 认证、Spring Security 实现
 │  ├─ service/             # 业务逻辑层
 │  └─ utils/               # 工具类 (ThreadLocal 用户上下文)
 ├─ src/main/resources/
 │  ├─ db/schema.sql        # 数据库初始化脚本
 │  ├─ lua/rate_limit.lua   # Redis 限流 Lua 脚本
 │  └─ templates/ai_risk_prompt.txt  # AI 风险评估提示词模板
-├─ src/test/               # 单元测试
-└─ pom.xml
+├─ src/test/               # 单元测试 & 并发压力测试
+├─ Dockerfile              # 后端镜像构建
+├─ docker-compose.yml      # MySQL + Redis + 后端一键编排
+├─ .env.example            # 环境变量模板
+├─ pom.xml
+└─ README.md
 ```
 
 ## 路线图 (Roadmap)
