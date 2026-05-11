@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 领用记录服务，实现 Redis 原子预扣 + MySQL 乐观锁落盘的防超卖方案。
+ * 领用记录服务，实现 Redis 原子预扣 + MySQL 原子扣减的防超卖方案。
+ * <p>单品领用采用乐观锁（@Version）方案，适合低并发场景；
+ * <p>批量领用采用原子扣减（stock = stock - N WHERE stock >= N）方案，适合高并发场景。
  * @author Re-zero
  * @version 1.0
  */
@@ -104,7 +106,7 @@ public class RecordService {
     }
 
     /**
-     * 批量提交领用申请 (核心业务)。
+     * 批量提交领用申请 (核心业务，原子扣减方案)。
      * 遍历明细逐条扣减，任意一条失败则回滚全部已扣 Redis 库存，@Transactional 回滚 MySQL。
      */
     @Transactional(rollbackFor = Exception.class)
@@ -118,7 +120,7 @@ public class RecordService {
             for (ApplyItemDTO item : batchDTO.getItems()) {
                 String redisKey = STOCK_KEY_PREFIX + item.getMaterialId();
 
-                // Redis 原子扣减
+                // 1. Redis 原子扣减
                 Long remainStock = redisTemplate.opsForValue().decrement(redisKey, item.getQuantity());
                 if (remainStock == null) {
                     throw new BusinessException("耗材 ID: " + item.getMaterialId() + " 缓存未命中！");
@@ -129,19 +131,16 @@ public class RecordService {
                 }
                 redisRollbackMap.put(item.getMaterialId(), item.getQuantity());
 
-                // MySQL 乐观锁落盘
-                Material material = materialMapper.selectById(item.getMaterialId());
-                if (material == null) {
-                    throw new BusinessException("数据库中不存在该耗材！");
-                }
-
-                material.setStock(material.getStock() - item.getQuantity());
-                int updatedRows = materialMapper.updateById(material);
+                // 2. MySQL 原子扣减（数据库行锁串行执行，零冲突）
+                int updatedRows = materialMapper.deductStock(item.getMaterialId(), item.getQuantity());
                 if (updatedRows == 0) {
-                    throw new BusinessException("耗材 [" + material.getName() + "] 并发更新冲突，请重试！");
+                    throw new BusinessException("耗材 ID: " + item.getMaterialId() + " 库存不足！");
                 }
 
-                // 生成单条领用记录
+                // 3. 查询耗材名称（用于记录和风控报告）
+                Material material = materialMapper.selectById(item.getMaterialId());
+
+                // 4. 生成领用记录
                 MaterialRecord record = new MaterialRecord();
                 record.setMaterialId(item.getMaterialId());
                 record.setApplicant(batchDTO.getApplicant());
@@ -163,7 +162,7 @@ public class RecordService {
             throw e;
         }
 
-        // 触发 AI 批量风控
+        // 5. 触发 AI 批量风控
         aiRiskService.analyzeBatchRisk(
                 generatedRecordIds,
                 batchDTO.getApplicant(),
