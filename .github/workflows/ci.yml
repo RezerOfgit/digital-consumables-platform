@@ -1,0 +1,66 @@
+name: DCP Project CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: dcp
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # 初始化数据库（复用已安装的 mysql-client，无需 apt-get）
+      - name: Initialize Database
+        run: |
+          for i in {1..30}; do
+            mysql -h 127.0.0.1 -u root -proot -e "SELECT 1" && break
+            echo "Waiting for MySQL to be ready..."
+            sleep 2
+          done
+          mysql -h 127.0.0.1 -u root -proot dcp < src/main/resources/db/schema.sql
+
+      - name: Run Tests
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/dcp?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: root
+          SPRING_REDIS_HOST: 127.0.0.1
+          SPRING_REDIS_PORT: 6379
+          SPRING_REDIS_PASSWORD: ""
+          DCP_JWT_SECRET: ${{ secrets.DCP_JWT_SECRET }}
+        run: mvn clean test
