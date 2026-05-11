@@ -1,3 +1,4 @@
+[![DCP Project CI](https://github.com/RezerOfgit/digital-consumables-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/RezerOfgit/digital-consumables-platform/actions/workflows/ci.yml)
 # 数字化耗材管控平台 (DCP)
 
 ## 项目背景
