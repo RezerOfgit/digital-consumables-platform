@@ -1,22 +1,23 @@
 package com.dcp.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.dcp.annotation.AuditLog;
 import com.dcp.annotation.RateLimit;
 import com.dcp.dto.ApplyDTO;
 import com.dcp.dto.ApproveDTO;
 import com.dcp.dto.BatchApplyDTO;
 import com.dcp.dto.R;
+import com.dcp.entity.MaterialRecord;
+import com.dcp.mapper.RecordMapper;
 import com.dcp.service.RecordService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * 领用记录管理控制器：单品/批量领用及审批。
@@ -30,6 +31,18 @@ public class RecordController {
 
     @Resource
     private RecordService recordService;
+
+    @Resource
+    private RecordMapper recordMapper;
+
+    /** 获取领用记录列表 */
+    @ApiOperation("获取领用记录列表")
+    @GetMapping("/list")
+    public R<List<MaterialRecord>> list() {
+        LambdaQueryWrapper<MaterialRecord> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(MaterialRecord::getCreateTime);
+        return R.ok(recordMapper.selectList(wrapper));
+    }
 
     /** 耗材单品领用申请 */
     @ApiOperation("耗材单品领用申请")
