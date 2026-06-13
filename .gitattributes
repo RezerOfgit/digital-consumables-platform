@@ -1,2 +1,4 @@
-/mvnw text eol=lf
+# 修复 Maven Wrapper 在不同系统下的换行符问题（已更新为后端新路径）
+dcp-backend/mvnw text eol=lf
+dcp-backend/mvnw.cmd text eol=crlf
 *.cmd text eol=crlf

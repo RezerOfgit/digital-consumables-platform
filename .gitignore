@@ -1,37 +1,40 @@
-dcp-backend/HELP.md
-target/
-dcp-backend/.mvn/wrapper/maven-wrapper.jar
+# ==========================================
+# 1. 基础设施与数据 (Infrastructure)
+# ==========================================
+.env
+mysql-data/
+*.log
+
+# ==========================================
+# 2. 后端模块 (Backend: Spring Boot / Maven)
+# ==========================================
+**/target/
 !**/src/main/**/target/
 !**/src/test/**/target/
-.env
-# Docker 数据卷（数据库数据，不应提交）
-mysql-data/
+dcp-backend/HELP.md
+dcp-backend/.mvn/wrapper/maven-wrapper.jar
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# ==========================================
+# 3. 前端模块 (Frontend: Vue3 / Node.js)
+# ==========================================
+dcp-frontend/node_modules/
+dcp-frontend/dist/
+dcp-frontend/dist-ssr/
+dcp-frontend/*.local
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-### IntelliJ IDEA ###
-.idea
-.idea/runConfigurations/
-*.iws
+# ==========================================
+# 4. 操作系统与编辑器缓存 (OS & Editors)
+# ==========================================
+.DS_Store
+Thumbs.db
+.idea/
 *.iml
+*.iws
 *.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
 .vscode/
+.classpath
+.project
+.settings/
