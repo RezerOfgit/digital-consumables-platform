@@ -10,9 +10,9 @@
     </parent>
 
     <groupId>com.dcp</groupId>
-    <artifactId>digital-consumables-platform</artifactId>
+    <artifactId>dcp-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>digital-consumables-platform</name>
+    <name>dcp-backend</name>
     <description>数字化耗材管控平台</description>
 
     <properties>
