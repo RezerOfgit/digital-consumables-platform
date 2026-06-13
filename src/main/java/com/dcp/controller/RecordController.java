@@ -1,6 +1,5 @@
 package com.dcp.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.dcp.annotation.AuditLog;
 import com.dcp.annotation.RateLimit;
 import com.dcp.dto.ApplyDTO;
@@ -38,10 +37,10 @@ public class RecordController {
     /** 获取领用记录列表 */
     @ApiOperation("获取领用记录列表")
     @GetMapping("/list")
+    @RateLimit(time = 10, count = 15) // 10秒内最多查15次，防恶意F5狂刷
     public R<List<MaterialRecord>> list() {
-        LambdaQueryWrapper<MaterialRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByDesc(MaterialRecord::getCreateTime);
-        return R.ok(recordMapper.selectList(wrapper));
+        List<MaterialRecord> list = recordService.getRecordList();
+        return R.ok("获取记录列表成功", list);
     }
 
     /** 耗材单品领用申请 */

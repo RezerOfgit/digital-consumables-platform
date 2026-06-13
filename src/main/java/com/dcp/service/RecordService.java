@@ -1,5 +1,6 @@
 package com.dcp.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.dcp.dto.ApplyDTO;
 import com.dcp.dto.ApplyItemDTO;
 import com.dcp.dto.ApproveDTO;
@@ -202,5 +203,20 @@ public class RecordService {
             String redisKey = STOCK_KEY_PREFIX + record.getMaterialId();
             redisTemplate.opsForValue().increment(redisKey, record.getQuantity());
         }
+    }
+
+    /**
+     * 获取所有领用记录列表 (纯查询，加 readOnly 优化性能)
+     */
+    @Transactional(readOnly = true)
+    public List<MaterialRecord> getRecordList() {
+        LambdaQueryWrapper<MaterialRecord> wrapper = new LambdaQueryWrapper<>();
+
+        // 按照创建时间倒序排，最新的记录在最上面
+        wrapper.orderByDesc(MaterialRecord::getCreateTime);
+
+        // 保护性限制：防止压测生成的历史数据过多导致查询卡顿或内存溢出
+        wrapper.last("LIMIT 200");
+        return recordMapper.selectList(wrapper);
     }
 }
