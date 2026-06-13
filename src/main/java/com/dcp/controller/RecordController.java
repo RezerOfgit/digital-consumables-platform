@@ -39,8 +39,23 @@ public class RecordController {
     @GetMapping("/list")
     @RateLimit(time = 10, count = 15) // 10秒内最多查15次，防恶意F5狂刷
     public R<List<MaterialRecord>> list() {
+
         List<MaterialRecord> list = recordService.getRecordList();
         return R.ok("获取记录列表成功", list);
+    }
+
+    /**
+     * 获取待审批记录列表（仅限管理员）
+     * 权限隔离：硬性限制仅限 ROLE_ADMIN 角色访问，防止普通用户越权
+     */
+    @ApiOperation("获取待审批记录列表 (仅限 ADMIN)")
+    @GetMapping("/pending")
+    @PreAuthorize("hasRole('ADMIN')")
+    @RateLimit(time = 10, count = 15) // 防止管理员后台工作台被恶意刷新打爆
+    public R<List<MaterialRecord>> getPendingRecords() {
+        
+        List<MaterialRecord> list = recordService.getPendingRecords();
+        return R.ok("获取待审批列表成功", list);
     }
 
     /** 耗材单品领用申请 */

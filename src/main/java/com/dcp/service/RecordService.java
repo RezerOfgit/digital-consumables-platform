@@ -219,4 +219,19 @@ public class RecordService {
         wrapper.last("LIMIT 200");
         return recordMapper.selectList(wrapper);
     }
+
+    /**
+     * 获取待审批记录列表 (仅查询 status = 0)
+     */
+    @Transactional(readOnly = true)
+    public List<MaterialRecord> getPendingRecords() {
+        LambdaQueryWrapper<MaterialRecord> wrapper = new LambdaQueryWrapper<>();
+
+        // 核心过滤：0 代表待审批
+        wrapper.eq(MaterialRecord::getStatus, 0);
+        // 排序：最新的申请排在最前面
+        wrapper.orderByDesc(MaterialRecord::getCreateTime);
+
+        return recordMapper.selectList(wrapper);
+    }
 }
