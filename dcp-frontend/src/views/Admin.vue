@@ -76,8 +76,7 @@
               <template #default="{ row }">
                 <el-tag v-if="row.status === 0" type="warning">待审批</el-tag>
                 <el-tag v-else-if="row.status === 3" type="danger" effect="dark">
-                  <el-icon style="margin-right: 4px;"><WarningFilled /></el-icon>
-                  AI 高危
+                  高危
                 </el-tag>
               </template>
             </el-table-column>
@@ -87,7 +86,7 @@
                   <span
                     v-for="(part, index) in splitRemark(row.remark)"
                     :key="index"
-                    :style="part.isAi ? 'color: #F56C6C; font-weight: bold;' : ''"
+                    :style="part.isAi ? 'color: #F56C6C;' : ''"
                   >{{ part.text }}</span>
                 </span>
                 <span v-else>{{ row.remark }}</span>
@@ -162,7 +161,6 @@
 import { ref, reactive, onMounted, watch } from 'vue';
 import { getMaterialList, addMaterial, getCategoryList, addCategory, approveRecord, getPendingRecords } from '@/api';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { WarningFilled } from '@element-plus/icons-vue';
 
 const activeTab = ref('material');
 const materialList = ref([]);

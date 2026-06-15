@@ -84,7 +84,7 @@ const getStatusType = (status) => {
 };
 
 const getStatusText = (status) => {
-  const texts = ['待审批', '已通过', '已驳回', '已归还'];
+  const texts = ['待审批', '已通过', '已驳回', '高危'];
   return texts[status] || '未知';
 };
 
