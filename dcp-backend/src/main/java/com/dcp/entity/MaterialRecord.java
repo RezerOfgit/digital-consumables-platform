@@ -33,8 +33,8 @@ public class MaterialRecord {
     @ApiModelProperty(value = "领用备注", example = "用于有机合成实验")
     private String remark;
 
-    /** 状态：0-待审批 1-已通过 2-已驳回 3-已归还 */
-    @ApiModelProperty(value = "状态: 0-已提交待审批, 1-已通过(发料), 2-已驳回, 3-已归还")
+    /** 状态：0-待审批 1-已通过 2-已驳回 3-AI高危待人工审批 */
+    @ApiModelProperty(value = "状态: 0-已提交待审批, 1-已通过(发料), 2-已驳回, 3-AI高危待人工审批")
     private Integer status;
 
     @ApiModelProperty(value = "创建时间", hidden = true)

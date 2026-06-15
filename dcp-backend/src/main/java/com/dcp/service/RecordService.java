@@ -10,6 +10,7 @@ import com.dcp.entity.MaterialRecord;
 import com.dcp.exception.BusinessException;
 import com.dcp.mapper.MaterialMapper;
 import com.dcp.mapper.RecordMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ import java.util.Map;
  * @author Re-zero
  * @version 1.0
  */
+@Slf4j
 @Service
 public class RecordService {
 
@@ -175,6 +177,7 @@ public class RecordService {
     /**
      * 审批领用记录 (同意或驳回)。
      * 驳回 (status=2) 时归还 Redis 和 MySQL 库存。
+     * 支持处理 status=0（待审批）和 status=3（AI高危待人工审批）的记录。
      */
     @Transactional(rollbackFor = Exception.class)
     public void approveRecord(ApproveDTO approveDTO) {
@@ -183,8 +186,8 @@ public class RecordService {
             throw new BusinessException("审批记录不存在");
         }
 
-        // 只有状态为 0 (待审批) 的记录才能被处理
-        if (record.getStatus() != 0) {
+        // 0=待审批 和 3=AI高危待人工审批 都可以被审批
+        if (record.getStatus() != 0 && record.getStatus() != 3) {
             throw new BusinessException("该记录已处理，无法重复审批");
         }
 
@@ -206,6 +209,30 @@ public class RecordService {
     }
 
     /**
+     * AI 风控标记高危，将状态改为 3（AI高危待人工审批），写入 AI 风险评估到备注。
+     * 不退还库存，等管理员最终决定。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void markAiHighRisk(ApproveDTO approveDTO) {
+        MaterialRecord record = recordMapper.selectById(approveDTO.getRecordId());
+        if (record == null) {
+            log.warn("[AI 风控] 记录不存在，跳过标记: recordId={}", approveDTO.getRecordId());
+            return;
+        }
+
+        // 只有状态为 0（待审批）的记录才标记，已审批的跳过
+        if (record.getStatus() != 0) {
+            log.warn("[AI 风控] 记录已处理，跳过标记: recordId={}, status={}", record.getId(), record.getStatus());
+            return;
+        }
+
+        record.setStatus(3);  // 3 = AI高危待人工审批
+        record.setRemark(record.getRemark() + " | [AI 风控]: " + approveDTO.getReply());
+        recordMapper.updateById(record);
+    }
+
+
+    /**
      * 获取所有领用记录列表 (纯查询，加 readOnly 优化性能)
      */
     @Transactional(readOnly = true)
@@ -221,17 +248,14 @@ public class RecordService {
     }
 
     /**
-     * 获取待审批记录列表 (仅查询 status = 0)
+     * 获取待审批记录列表 (查询 status=0 待审批 和 status=3 AI高危待人工审批)
      */
     @Transactional(readOnly = true)
     public List<MaterialRecord> getPendingRecords() {
         LambdaQueryWrapper<MaterialRecord> wrapper = new LambdaQueryWrapper<>();
-
-        // 核心过滤：0 代表待审批
-        wrapper.eq(MaterialRecord::getStatus, 0);
-        // 排序：最新的申请排在最前面
+        // 同时查 0（待审批）和 3（AI高危待人工审批）
+        wrapper.in(MaterialRecord::getStatus, 0, 3);
         wrapper.orderByDesc(MaterialRecord::getCreateTime);
-
         return recordMapper.selectList(wrapper);
     }
 }

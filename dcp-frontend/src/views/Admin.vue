@@ -56,22 +56,43 @@
         </el-card>
       </el-tab-pane>
 
+      <!-- ====== 审批管理（改动部分） ====== -->
       <el-tab-pane label="审批管理" name="approve">
         <el-card>
           <template #header>
             <span>待审批记录</span>
           </template>
-          <el-table :data="pendingRecords" stripe style="width: 100%">
+          <el-table
+            :data="pendingRecords"
+            stripe
+            style="width: 100%"
+            :row-class-name="tableRowClassName"
+          >
             <el-table-column prop="id" label="ID" width="80" />
             <el-table-column prop="materialId" label="耗材ID" width="100" />
             <el-table-column prop="applicant" label="申请人" width="120" />
             <el-table-column prop="quantity" label="数量" width="100" />
-            <el-table-column prop="status" label="状态" width="120">
+            <el-table-column prop="status" label="状态" width="160">
               <template #default="{ row }">
-                <el-tag type="warning">待审批</el-tag>
+                <el-tag v-if="row.status === 0" type="warning">待审批</el-tag>
+                <el-tag v-else-if="row.status === 3" type="danger" effect="dark">
+                  <el-icon style="margin-right: 4px;"><WarningFilled /></el-icon>
+                  AI 高危
+                </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="remark" label="备注" show-overflow-tooltip />
+            <el-table-column prop="remark" label="备注" show-overflow-tooltip min-width="300">
+              <template #default="{ row }">
+                <span v-if="row.remark && row.remark.includes('[AI 风控]')">
+                  <span
+                    v-for="(part, index) in splitRemark(row.remark)"
+                    :key="index"
+                    :style="part.isAi ? 'color: #F56C6C; font-weight: bold;' : ''"
+                  >{{ part.text }}</span>
+                </span>
+                <span v-else>{{ row.remark }}</span>
+              </template>
+            </el-table-column>
             <el-table-column prop="createTime" label="创建时间" width="180" />
             <el-table-column label="操作" width="200">
               <template #default="{ row }">
@@ -82,6 +103,7 @@
           </el-table>
         </el-card>
       </el-tab-pane>
+      <!-- ====== 审批管理（改动结束） ====== -->
     </el-tabs>
 
     <el-dialog v-model="showAddMaterial" title="新增耗材" width="500px">
@@ -140,6 +162,7 @@
 import { ref, reactive, onMounted, watch } from 'vue';
 import { getMaterialList, addMaterial, getCategoryList, addCategory, approveRecord, getPendingRecords } from '@/api';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { WarningFilled } from '@element-plus/icons-vue';
 
 const activeTab = ref('material');
 const materialList = ref([]);
@@ -173,6 +196,26 @@ const getDangerLevelType = (level) => {
 const getDangerLevelText = (level) => {
   const texts = ['普通', '低危', '高危', '致命'];
   return texts[level] || '普通';
+};
+
+// ====== 新增：AI 高危行标红 ======
+const tableRowClassName = ({ row }) => {
+  if (row.status === 3) {
+    return 'ai-high-risk-row';
+  }
+  return '';
+};
+
+// ====== 新增：拆分备注，AI 风控部分标红 ======
+const splitRemark = (remark) => {
+  if (!remark) return [];
+  const parts = remark.split(/($$AI 风控$$[^\|]*)/g);
+  return parts
+    .filter(p => p !== '')
+    .map(p => ({
+      text: p,
+      isAi: p.includes('[AI 风控]')
+    }));
 };
 
 const fetchMaterials = async () => {
@@ -283,5 +326,13 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+/* AI 高危行整行标红 */
+:deep(.ai-high-risk-row) {
+  background-color: #fef0f0 !important;
+}
+:deep(.ai-high-risk-row:hover > td) {
+  background-color: #fde2e2 !important;
 }
 </style>

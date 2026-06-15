@@ -99,21 +99,38 @@ public class AiRiskService {
         return "";
     }
 
-    /**
-     * 熔断：批量驳回指定领用记录并退还库存。
-     */
-    private void executeCircuitBreaker(List<Long> recordIds, String aiAdvice) {
-        log.warn("[AI 熔断] 正在自动驳回 {} 条订单并退还库存...", recordIds.size());
-        for (Long recordId : recordIds) {
-            ApproveDTO rejectDto = new ApproveDTO();
-            rejectDto.setRecordId(recordId);
-            rejectDto.setStatus(2);
-            rejectDto.setReply("AI 智能风控自动熔断: " + aiAdvice);
+//    /**
+//     * 熔断：批量驳回指定领用记录并退还库存。
+//     */
+//    private void executeCircuitBreaker(List<Long> recordIds, String aiAdvice) {
+//        log.warn("[AI 熔断] 正在自动驳回 {} 条订单并退还库存...", recordIds.size());
+//        for (Long recordId : recordIds) {
+//            ApproveDTO rejectDto = new ApproveDTO();
+//            rejectDto.setRecordId(recordId);
+//            rejectDto.setStatus(2);
+//            rejectDto.setReply("AI 智能风控自动熔断: " + aiAdvice);
+//
+//            recordService.approveRecord(rejectDto);
+//        }
+//        log.info("[AI 熔断] 处理完毕，库存已安全退还！");
+//    }
 
-            recordService.approveRecord(rejectDto);
+    /**
+     * 标记为 AI 高危待人工审批，不自动驳回，由管理员最终决定。
+     */
+    private void markAsAiHighRisk(List<Long> recordIds, String aiAdvice) {
+        log.warn("[AI 风控] 发现高危风险，正在标记 {} 条记录为待人工审批...", recordIds.size());
+        for (Long recordId : recordIds) {
+            ApproveDTO markDto = new ApproveDTO();
+            markDto.setRecordId(recordId);
+            markDto.setStatus(3);  // 3 = AI高危待人工审批
+            markDto.setReply("AI 风控识别高危风险: " + aiAdvice);
+
+            recordService.markAiHighRisk(markDto);
         }
-        log.info("[AI 熔断] 处理完毕，库存已安全退还！");
+        log.info("[AI 风控] 标记完毕，等待管理员最终审批！");
     }
+
 
     // ==================== 风控方法 ====================
 
@@ -141,7 +158,7 @@ public class AiRiskService {
             log.info("[AI 评估完成] 专家建议：\n{}", aiAdvice);
 
             if (aiAdvice.contains("高危")) {
-                executeCircuitBreaker(List.of(recordId), aiAdvice);
+                markAsAiHighRisk(List.of(recordId), aiAdvice);
             }
         } catch (java.util.IllegalFormatException e) {
             log.error("[AI 模板错误] 提示词模板占位符与参数类型不匹配，请检查 ai_risk_prompt.txt 文件！详细原因：{}", e.getMessage());
@@ -165,7 +182,7 @@ public class AiRiskService {
             log.info("[AI 综合评估完成] 专家建议：\n{}", aiAdvice);
 
             if (aiAdvice.contains("高危")) {
-                executeCircuitBreaker(recordIds, aiAdvice);
+                markAsAiHighRisk(recordIds, aiAdvice);
             }
         } catch (Exception e) {
             log.error("[AI 批量评估失败] {}", e.getMessage());
