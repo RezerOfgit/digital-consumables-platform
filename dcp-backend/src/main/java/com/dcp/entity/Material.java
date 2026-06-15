@@ -42,8 +42,8 @@ public class Material {
     @ApiModelProperty(value = "当前库存量", example = "100")
     private Integer stock;
 
-    /** 危险等级：0-普通 1-低危 2-高危 3-致命 */
-    @ApiModelProperty(value = "危险等级: 0-普通, 1-低危, 2-高危, 3-致命", example = "1")
+    /** 危险等级：0-普通 1-低危 2-高危*/
+    @ApiModelProperty(value = "危险等级: 0-普通, 1-低危, 2-高危", example = "1")
     private Integer dangerLevel = 0;
 
     @ApiModelProperty(value = "存储条件", example = "常温避光")

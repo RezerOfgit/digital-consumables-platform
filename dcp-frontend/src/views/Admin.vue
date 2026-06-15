@@ -51,7 +51,11 @@
             <el-table-column prop="id" label="ID" width="80" />
             <el-table-column prop="name" label="分类名称" />
             <el-table-column prop="sort" label="排序" width="100" />
-            <el-table-column prop="createTime" label="创建时间" width="180" />
+            <el-table-column label="创建时间" width="180">
+              <template #default="{ row }">
+                {{ formatTime(row.createTime) }}
+              </template>
+            </el-table-column>
           </el-table>
         </el-card>
       </el-tab-pane>
@@ -92,7 +96,11 @@
                 <span v-else>{{ row.remark }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="createTime" label="创建时间" width="180" />
+            <el-table-column label="创建时间" width="180">
+              <template #default="{ row }">
+                {{ formatTime(row.createTime) }}
+              </template>
+            </el-table-column>
             <el-table-column label="操作" width="200">
               <template #default="{ row }">
                 <el-button type="success" size="small" @click="quickApprove(row, 1)">同意</el-button>
@@ -127,7 +135,6 @@
             <el-option :label="getDangerLevelText(0)" :value="0" />
             <el-option :label="getDangerLevelText(1)" :value="1" />
             <el-option :label="getDangerLevelText(2)" :value="2" />
-            <el-option :label="getDangerLevelText(3)" :value="3" />
           </el-select>
         </el-form-item>
         <el-form-item label="存储条件">
@@ -187,12 +194,12 @@ const categoryForm = reactive({
 });
 
 const getDangerLevelType = (level) => {
-  const types = ['', 'info', 'warning', 'danger'];
+  const types = ['', 'info', 'danger'];
   return types[level] || 'info';
 };
 
 const getDangerLevelText = (level) => {
-  const texts = ['普通', '低危', '高危', '致命'];
+  const texts = ['普通', '低危', '高危'];
   return texts[level] || '普通';
 };
 
@@ -301,6 +308,18 @@ const quickApprove = async (row, status) => {
       console.error(error);
     }
   }).catch(() => {});
+};
+
+const formatTime = (time) => {
+  if (!time) return '';
+  const date = new Date(time);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
 watch(activeTab, (newTab) => {

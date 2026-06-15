@@ -127,12 +127,12 @@ const batchApplyForm = reactive({
 });
 
 const getDangerLevelType = (level) => {
-  const types = ['', 'info', 'warning', 'danger'];
+  const types = ['', 'info', 'danger'];
   return types[level] || 'info';
 };
 
 const getDangerLevelText = (level) => {
-  const texts = ['普通', '低危', '高危', '致命'];
+  const texts = ['普通', '低危', '高危'];
   return texts[level] || '普通';
 };
 
