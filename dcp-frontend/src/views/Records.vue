@@ -4,19 +4,31 @@
       <template #header>
         <span>领用记录</span>
       </template>
-      <el-table :data="records" stripe style="width: 100%">
+      <el-table :data="records" stripe style="width: 100%" :row-class-name="tableRowClassName">
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="materialId" label="耗材ID" width="100" />
         <el-table-column prop="applicant" label="申请人" width="120" />
         <el-table-column prop="quantity" label="数量" width="100" />
-        <el-table-column prop="status" label="状态" width="120">
+        <el-table-column prop="status" label="状态" width="160">
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">
-              {{ getStatusText(row.status) }}
-            </el-tag>
+            <el-tag v-if="row.status === 0" type="warning">待审批</el-tag>
+            <el-tag v-else-if="row.status === 1" type="success">已通过</el-tag>
+            <el-tag v-else-if="row.status === 2" type="danger">已驳回</el-tag>
+            <el-tag v-else-if="row.status === 3" type="danger" effect="dark">高危待审批</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="remark" label="备注" show-overflow-tooltip />
+        <el-table-column prop="remark" label="备注" show-overflow-tooltip min-width="300">
+          <template #default="{ row }">
+            <span v-if="row.remark && row.remark.includes('[AI 风控]')">
+              <span
+                v-for="(part, index) in splitRemark(row.remark)"
+                :key="index"
+                :style="part.isAi ? 'color: #F56C6C;' : ''"
+              >{{ part.text }}</span>
+            </span>
+            <span v-else>{{ row.remark }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="创建时间" width="180">
           <template #default="{ row }">
             {{ formatTime(row.createTime) }}
@@ -139,6 +151,24 @@ const formatTime = (time) => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
+const splitRemark = (remark) => {
+  if (!remark) return [];
+  const parts = remark.split(/($$AI 风控$$[^\|]*)/g);
+  return parts
+    .filter(p => p !== '')
+    .map(p => ({
+      text: p,
+      isAi: p.includes('[AI 风控]')
+    }));
+};
+
+const tableRowClassName = ({ row }) => {
+  if (row.status === 3) {
+    return 'ai-high-risk-row';
+  }
+  return '';
+};
+
 onMounted(() => {
   fetchRecords();
 });
@@ -147,5 +177,12 @@ onMounted(() => {
 <style scoped>
 .records-container {
   padding: 0;
+}
+
+:deep(.ai-high-risk-row) {
+  background-color: #fef0f0 !important;
+}
+:deep(.ai-high-risk-row:hover > td) {
+  background-color: #fde2e2 !important;
 }
 </style>
