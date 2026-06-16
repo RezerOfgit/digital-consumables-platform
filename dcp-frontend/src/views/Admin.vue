@@ -80,7 +80,7 @@
               <template #default="{ row }">
                 <el-tag v-if="row.status === 0" type="warning">待审批</el-tag>
                 <el-tag v-else-if="row.status === 3" type="danger" effect="dark">
-                  高危
+                  高危待审批
                 </el-tag>
               </template>
             </el-table-column>
@@ -101,10 +101,11 @@
                 {{ formatTime(row.createTime) }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="200">
+            <el-table-column label="操作" width="120">
               <template #default="{ row }">
-                <el-button type="success" size="small" @click="quickApprove(row, 1)">同意</el-button>
-                <el-button type="danger" size="small" @click="quickApprove(row, 2)">驳回</el-button>
+                <el-button type="primary" size="small" @click="openApproveDialog(row)">
+                  审批
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -161,13 +162,37 @@
         <el-button type="primary" :loading="addCategoryLoading" @click="submitAddCategory">提交</el-button>
       </template>
     </el-dialog>
+
+    <!-- 审批弹窗 -->
+    <el-dialog v-model="showApproveDialog" title="审批领用" width="450px">
+      <el-form :model="approveForm" label-width="100px">
+        <el-form-item label="审批结果">
+          <el-radio-group v-model="approveForm.status">
+            <el-radio :value="1">同意</el-radio>
+            <el-radio :value="2">驳回</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="审批意见">
+          <el-input
+            v-model="approveForm.reply"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入审批意见"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showApproveDialog = false">取消</el-button>
+        <el-button type="primary" @click="submitApprove">提交</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue';
 import { getMaterialList, addMaterial, getCategoryList, addCategory, approveRecord, getPendingRecords } from '@/api';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage } from 'element-plus';
 
 const activeTab = ref('material');
 const materialList = ref([]);
@@ -288,26 +313,38 @@ const submitAddCategory = async () => {
   }
 };
 
-const quickApprove = async (row, status) => {
-  const action = status === 1 ? '同意' : '驳回';
-  ElMessageBox.confirm(`确定${action}该领用申请吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
-    try {
-      await approveRecord({
-        recordId: row.id,
-        status: status,
-        reply: action
-      });
-      ElMessage.success('审批成功');
-      fetchPendingRecords();
-      fetchMaterials();
-    } catch (error) {
-      console.error(error);
-    }
-  }).catch(() => {});
+const showApproveDialog = ref(false);
+const approveForm = reactive({
+  recordId: null,
+  status: 1,
+  reply: ''
+});
+
+const openApproveDialog = (row) => {
+  approveForm.recordId = row.id;
+  approveForm.status = 1;
+  approveForm.reply = '';
+  showApproveDialog.value = true;
+};
+
+const submitApprove = async () => {
+  if (!approveForm.reply.trim()) {
+    ElMessage.warning('请输入审批意见');
+    return;
+  }
+  try {
+    await approveRecord({
+      recordId: approveForm.recordId,
+      status: approveForm.status,
+      reply: approveForm.reply
+    });
+    ElMessage.success('审批成功');
+    showApproveDialog.value = false;
+    fetchPendingRecords();
+    fetchMaterials();
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const formatTime = (time) => {

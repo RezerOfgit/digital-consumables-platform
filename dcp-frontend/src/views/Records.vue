@@ -25,7 +25,7 @@
         <el-table-column v-if="userStore.role === 'ADMIN'" label="操作" width="150">
           <template #default="{ row }">
             <el-button
-              v-if="row.status === 0"
+              v-if="row.status === 0 || row.status === 3"
               type="primary"
               size="small"
               @click="handleApprove(row)"
@@ -88,7 +88,7 @@ const getStatusType = (status) => {
 };
 
 const getStatusText = (status) => {
-  const texts = ['待审批', '已通过', '已驳回', '高危'];
+  const texts = ['待审批', '已通过', '已驳回', '高危待审批'];
   return texts[status] || '未知';
 };
 
