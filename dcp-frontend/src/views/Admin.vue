@@ -66,12 +66,13 @@
           <template #header>
             <span>待审批记录</span>
           </template>
-          <el-table
-            :data="pendingRecords"
-            stripe
-            style="width: 100%"
-            :row-class-name="tableRowClassName"
-          >
+            <el-table
+              :data="pendingRecords"
+              stripe
+              style="width: 100%"
+              :row-class-name="tableRowClassName"
+              v-loading="pendingLoading"
+            >
             <el-table-column prop="id" label="ID" width="80" />
             <el-table-column prop="materialId" label="耗材ID" width="100" />
             <el-table-column prop="applicant" label="申请人" width="120" />
@@ -194,6 +195,8 @@ import { ref, reactive, onMounted, watch } from 'vue';
 import { getMaterialList, addMaterial, getCategoryList, addCategory, approveRecord, getPendingRecords } from '@/api';
 import { ElMessage } from 'element-plus';
 
+const approveLoading = ref(false);
+const pendingLoading = ref(false);
 const activeTab = ref('material');
 const materialList = ref([]);
 const categoryList = ref([]);
@@ -248,6 +251,18 @@ const splitRemark = (remark) => {
     }));
 };
 
+const fetchPendingRecords = async () => {
+  pendingLoading.value = true;
+  try {
+    const res = await getPendingRecords();
+    pendingRecords.value = res.data;
+  } catch (error) {
+    console.error('Failed to fetch pending records:', error);
+  } finally {
+    pendingLoading.value = false;
+  }
+};
+
 const fetchMaterials = async () => {
   try {
     const res = await getMaterialList();
@@ -263,15 +278,6 @@ const fetchCategories = async () => {
     categoryList.value = res.data;
   } catch (error) {
     console.error('Failed to fetch categories:', error);
-  }
-};
-
-const fetchPendingRecords = async () => {
-  try {
-    const res = await getPendingRecords();
-    pendingRecords.value = res.data;
-  } catch (error) {
-    console.error('Failed to fetch pending records:', error);
   }
 };
 

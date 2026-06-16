@@ -4,7 +4,7 @@
       <template #header>
         <span>领用记录</span>
       </template>
-      <el-table :data="records" stripe style="width: 100%" :row-class-name="tableRowClassName">
+        <el-table :data="records" stripe style="width: 100%" :row-class-name="tableRowClassName" v-loading="loading">
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="materialId" label="耗材ID" width="100" />
         <el-table-column prop="applicant" label="申请人" width="120" />
@@ -81,6 +81,7 @@ import { useUserStore } from '@/stores/user';
 import { getRecordList, approveRecord } from '@/api';
 import { ElMessage } from 'element-plus';
 
+const loading = ref(false);
 const userStore = useUserStore();
 
 const records = ref([]);
@@ -105,11 +106,14 @@ const getStatusText = (status) => {
 };
 
 const fetchRecords = async () => {
+  loading.value = true;
   try {
     const res = await getRecordList();
     records.value = res.data;
   } catch (error) {
     console.error('Failed to fetch records:', error);
+  } finally {
+    loading.value = false;
   }
 };
 
