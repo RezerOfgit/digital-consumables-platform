@@ -49,27 +49,26 @@
       </el-table>
     </el-card>
 
-    <el-dialog v-model="showApproveDialog" title="审批领用" width="500px">
+    <el-dialog v-model="showApproveDialog" title="审批领用" width="450px">
       <el-form :model="approveForm" label-width="100px">
-        <el-form-item label="申请人">
-          <el-input v-model="currentRecord.applicant" disabled />
-        </el-form-item>
-        <el-form-item label="数量">
-          <el-input v-model="currentRecord.quantity" disabled />
-        </el-form-item>
         <el-form-item label="审批结果">
           <el-radio-group v-model="approveForm.status">
-            <el-radio :label="1">同意</el-radio>
-            <el-radio :label="2">驳回</el-radio>
+            <el-radio :value="1">同意</el-radio>
+            <el-radio :value="2">驳回</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="审批意见">
-          <el-input v-model="approveForm.reply" type="textarea" :rows="3" placeholder="请输入审批意见" />
+          <el-input
+            v-model="approveForm.reply"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入审批意见"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showApproveDialog = false">取消</el-button>
-        <el-button type="primary" :loading="approveLoading" @click="submitApprove">提交</el-button>
+        <el-button type="primary" @click="submitApprove">提交</el-button>
       </template>
     </el-dialog>
   </div>
@@ -87,7 +86,6 @@ const userStore = useUserStore();
 const records = ref([]);
 const showApproveDialog = ref(false);
 const approveLoading = ref(false);
-const currentRecord = ref({});
 
 const approveForm = reactive({
   recordId: null,
@@ -118,7 +116,6 @@ const fetchRecords = async () => {
 };
 
 const handleApprove = (row) => {
-  currentRecord.value = row;
   approveForm.recordId = row.id;
   approveForm.status = 1;
   approveForm.reply = '';
