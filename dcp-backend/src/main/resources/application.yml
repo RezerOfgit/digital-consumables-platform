@@ -7,6 +7,19 @@ spring:
     url: jdbc:mysql://127.0.0.1:3306/dcp?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
     password: ${DB_PASSWORD:}  # 默认空值，避免启动报错
+    
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    listener:
+      simple:
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
 
   # 解决 Spring Boot 2.6+ 与 Swagger 2 的兼容性问题
   mvc:
