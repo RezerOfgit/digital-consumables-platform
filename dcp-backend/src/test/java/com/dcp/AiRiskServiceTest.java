@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpEntity;
@@ -27,9 +28,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * AiRiskService 单元测试，验证 AI 调用和风控拦截逻辑。
+ * AiRiskService 单元测试，验证 MQ 消息发送和 AI 风控逻辑。
  * @author Re-zero
- * @version 1.0
+ * @version 2.0
  */
 @Slf4j
 @ExtendWith(MockitoExtension.class)
@@ -47,17 +48,54 @@ public class AiRiskServiceTest {
     @Mock
     private ResourceLoader resourceLoader;
 
+    @Mock
+    private RabbitTemplate rabbitTemplate;
+
     @BeforeEach
     void setUp() {
-        // 使用 Spring 测试工具类，一行代码搞定私有属性注入，告别 setAccessible
         ReflectionTestUtils.setField(aiRiskService, "deepseekApiKey", "sk-test-key");
         ReflectionTestUtils.setField(aiRiskService, "modelName", "deepseek-chat");
     }
 
     @Test
-    @DisplayName("AI 返回高危时应触发风控拦截，自动驳回领用")
-    void analyzeRequisitionRisk_highRisk_shouldReject() throws Exception {
-        log.info("====== 测试：AI 风控 - 高危触发自动驳回 ======");
+    @DisplayName("单品风控应发送 MQ 消息到正确的交换机和队列")
+    void analyzeRequisitionRisk_shouldSendMQMessage() {
+        log.info("====== 测试：单品风控 MQ 消息发送 ======");
+
+        aiRiskService.analyzeRequisitionRisk(
+                1L, "test01", "氢氟酸 (HF)", 5, "倒入下水道处理");
+
+        // 验证 MQ 消息发送到了正确的交换机和路由键
+        verify(rabbitTemplate).convertAndSend(
+                eq("dcp.ai.risk.exchange"),
+                eq("ai.risk.single"),
+                any(Map.class)
+        );
+
+        log.info("验证通过：消息已发送到 MQ 单品风控队列");
+    }
+
+    @Test
+    @DisplayName("API Key 未配置时应跳过 MQ 发送")
+    void analyzeRequisitionRisk_noApiKey_shouldSkip() {
+        log.info("====== 测试：API Key 未配置跳过风控 ======");
+
+        // 清空 API Key
+        ReflectionTestUtils.setField(aiRiskService, "deepseekApiKey", "");
+
+        aiRiskService.analyzeRequisitionRisk(
+                1L, "test01", "氢氟酸 (HF)", 5, "倒入下水道处理");
+
+        // 验证没有发送 MQ 消息
+        verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), any(Object.class));
+
+        log.info("验证通过：API Key 为空时跳过风控");
+    }
+
+    @Test
+    @DisplayName("AI 返回高危时 executeSingleRiskCheck 应标记为高危待审批")
+    void executeSingleRiskCheck_highRisk_shouldMarkAsHighRisk() throws Exception {
+        log.info("====== 测试：AI 风控 - 高危触发标记 ======");
 
         // mock prompt 模板加载失败，走兜底模板
         Resource mockResource = mock(Resource.class);
@@ -75,18 +113,18 @@ public class AiRiskServiceTest {
         when(restTemplate.postForEntity(anyString(), any(HttpEntity.class), eq(Map.class)))
                 .thenReturn(new ResponseEntity<>(responseBody, HttpStatus.OK));
 
-        aiRiskService.analyzeRequisitionRisk(
+        aiRiskService.executeSingleRiskCheck(
                 1L, "test01", "氢氟酸 (HF)", 5, "倒入下水道处理");
 
-        // 验证触发了自动驳回（调用了 approveRecord 且 status = 2）
-        verify(recordService).approveRecord(any(ApproveDTO.class));
+        // 验证标记为高危待审批（status = 3）
+        verify(recordService).markAiHighRisk(any(ApproveDTO.class));
 
-        log.info("高危风控：DeepSeek 返回高危 -> 触发风控拦截 -> 自动驳回领用");
+        log.info("验证通过：AI 返回高危 -> 标记为高危待审批");
     }
 
     @Test
-    @DisplayName("AI 返回非高危时不应触发风控拦截，领用正常放行")
-    void analyzeRequisitionRisk_lowRisk_shouldNotReject() throws Exception {
+    @DisplayName("AI 返回非高危时 executeSingleRiskCheck 不应触发标记")
+    void executeSingleRiskCheck_lowRisk_shouldNotMark() throws Exception {
         log.info("====== 测试：AI 风控 - 低危正常放行 ======");
 
         Resource mockResource = mock(Resource.class);
@@ -103,12 +141,12 @@ public class AiRiskServiceTest {
         when(restTemplate.postForEntity(anyString(), any(HttpEntity.class), eq(Map.class)))
                 .thenReturn(new ResponseEntity<>(responseBody, HttpStatus.OK));
 
-        aiRiskService.analyzeRequisitionRisk(
+        aiRiskService.executeSingleRiskCheck(
                 1L, "test01", "丁腈无尘手套", 5, "日常领用");
 
-        // 验证没有触发风控拦截
-        verify(recordService, never()).approveRecord(any());
+        // 验证没有触发标记
+        verify(recordService, never()).markAiHighRisk(any());
 
-        log.info("低危风控：DeepSeek 返回低危 -> 不触发风控拦截 -> 领用正常放行");
+        log.info("验证通过：AI 返回低危 -> 不触发标记 -> 正常放行");
     }
 }
