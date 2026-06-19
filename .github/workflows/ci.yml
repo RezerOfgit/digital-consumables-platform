@@ -63,9 +63,10 @@ jobs:
             echo "Waiting for MySQL to be ready..."
             sleep 2
           done
-          mysql -h 127.0.0.1 -u root -proot dcp < src/main/resources/db/schema.sql
+          mysql -h 127.0.0.1 -u root -proot dcp < dcp-backend/src/main/resources/db/schema.sql
 
       - name: Run Tests
+        working-directory: dcp-backend
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/dcp?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
           SPRING_DATASOURCE_USERNAME: root
