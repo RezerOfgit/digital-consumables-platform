@@ -34,6 +34,17 @@ jobs:
           --health-timeout=5s 
           --health-retries=5
 
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+          - 5672:5672
+          - 15672:15672
+        options: >-
+          --health-cmd="rabbitmq-diagnostics -q ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -62,5 +73,9 @@ jobs:
           SPRING_REDIS_HOST: 127.0.0.1
           SPRING_REDIS_PORT: 6379
           SPRING_REDIS_PASSWORD: ""
+          SPRING_RABBITMQ_HOST: 127.0.0.1
+          SPRING_RABBITMQ_PORT: 5672
+          SPRING_RABBITMQ_USERNAME: guest
+          SPRING_RABBITMQ_PASSWORD: guest
           DCP_JWT_SECRET: ${{ secrets.DCP_JWT_SECRET }}
         run: mvn clean test
